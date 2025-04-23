@@ -10,7 +10,6 @@ from aws_app_config.aws_app_config_client_sandbox_alex import (
 )
 from dotenv import load_dotenv
 
-# * Load environment variables from a .env file
 load_dotenv()
 
 app = Flask(__name__)
@@ -18,8 +17,8 @@ app = Flask(__name__)
 # * AWS AppConfigClient instance - for feature flags
 aws_app_config_client = AWSAppConfigClientSandboxAlex()
 
-print(f"GOOGLE_OAUTH_CLIENT_ID: {os.environ['GOOGLE_OAUTH_CLIENT_ID']}")
-print(f"GOOGLE_OAUTH_CLIENT_SECRET: {os.environ['GOOGLE_OAUTH_CLIENT_SECRET']}")
+# print(f"GOOGLE_OAUTH_CLIENT_ID: {os.environ['GOOGLE_OAUTH_CLIENT_ID']}")
+# print(f"GOOGLE_OAUTH_CLIENT_SECRET: {os.environ['GOOGLE_OAUTH_CLIENT_SECRET']}")
 
 google_bp = make_google_blueprint(
     client_id=os.environ["GOOGLE_OAUTH_CLIENT_ID"],

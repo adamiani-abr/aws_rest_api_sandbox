@@ -3,6 +3,9 @@ import redis
 import os
 import uuid
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -22,7 +25,7 @@ try:
         # decode_responses=True,  # Redis responses returned as Python strings instead of raw bytes - for debugging
         decode_responses=False,  # Redis responses returned as raw bytes - must be False if trying to read session data
         socket_timeout=5,
-        # ssl=True,  # must be enabled if connecting to Redis in AWS ElastiCache
+        ssl=(os.getenv("REDIS_SSL", "False") == "True"),  # must be `True` if connecting to Redis in AWS ElastiCache
     )
 except Exception as e:
     print(f"Error connecting to Redis: {e}")
