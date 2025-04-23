@@ -50,6 +50,7 @@ services:
     depends_on:
       - redis
     environment:
+      REDIS_SSL: False
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SECRET_KEY: supersecretkey
