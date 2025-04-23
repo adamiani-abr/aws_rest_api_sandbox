@@ -160,6 +160,22 @@ $resp.body
 * each ECS Service should be setup with the `Client and Server` option, not the ~~`Client Side Only`~~ option
   * to be able to be mapped to in API Gateway in Integrations, there has to be an internally publicized `port mapping`
 
+## OAuth2.0
+
+### Google
+
+* have to setup on [Google Cloud Console](https://console.cloud.google.com)
+* create project to authenticate with OAuth2.0 on [Google Cloud Console](https://console.cloud.google.com/auth/overview)
+* after creating project:
+  * Clients > Application Type > Web Application
+  * Authorized redirect URIs:
+    * `http://localhost:{port of flask web app}/login/google/authorized`
+    * `http://{AWS ALB DNS A Record attached to AWS ECS web_service}/login/google/authorized`
+      * AWS Console > ECS Service > Configuration and Networking > `DNS names`
+  * copy Google secret variables:
+    * `Client ID`
+    * `Client secret`
+
 ## Setup Stages
 
 ### V1
