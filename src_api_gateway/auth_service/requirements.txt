@@ -1,0 +1,6 @@
+flask
+Flask-Session
+redis
+flask-login
+requests
+gunicorn

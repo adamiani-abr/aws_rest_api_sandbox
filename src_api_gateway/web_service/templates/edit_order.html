@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ order.order_id }}{% endblock %}
+{% block content %}
+  <h1>Edit Order {{ order.order_id }}</h1>
+  {% if errors %}
+    <ul class="errors">
+      {% for msg in errors.values() %}
+        <li>{{ msg }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  <form method="post">
+    <label>Items:<br>
+      <input type="text" name="items"
+             value="{{ order['items'] | join(',') }}"
+             required pattern="[^,]+(,[^,]+)*">
+    </label><br>
+    <label>Total:<br>
+      <input type="number" name="total"
+             step="0.01" min="0"
+             value="{{ order.total }}"
+             required>
+    </label><br>
+    <label>Status:<br>
+      <select name="status" required>
+        <option value="created" {% raw %}{% if order.status=='created' %}selected{% endif %}{% endraw %}>created</option>
+        <option value="shipped" {% raw %}{% if order.status=='shipped' %}selected{% endif %}{% endraw %}>shipped</option>
+        <option value="canceled" {% raw %}{% if order.status=='canceled' %}selected{% endif %}{% endraw %}>canceled</option>
+      </select>
+    </label><br>
+    <button type="submit">Update Order</button>
+  </form>
+{% endblock %}

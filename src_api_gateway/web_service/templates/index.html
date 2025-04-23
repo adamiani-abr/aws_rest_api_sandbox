@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+  {% if user %}
+    <h1>Hello, {{ user }}!</h1>
+    <p>You are logged in.</p>
+    <p><a href="{{ url_for('dashboard') }}">Go to Dashboard</a> | <a href="{{ url_for('logout') }}">Logout</a></p>
+  {% else %}
+    <h1>Hello, Guest!</h1>
+    <p><a href="{{ url_for('login') }}">Login here</a></p>
+  {% endif %}
+{% endblock %}

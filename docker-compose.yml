@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+  web_service:
+    build:
+      context: ./src_api_gateway/web_service
+      dockerfile: Dockerfile
+    depends_on:
+      - order_service
+      - auth_service
+    environment:
+      AUTH_SERVICE_URL_REST_API: http://auth_service:5000
+      ORDER_SERVICE_URL_REST_API: http://order_service:5003
+      SECRET_KEY: supersecretkey
+      PORT_FLASK: 5001
+      REDIS_HOST: redis
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION}"
+      GOOGLE_OAUTH_CLIENT_ID: "${GOOGLE_OAUTH_CLIENT_ID}"
+      GOOGLE_OAUTH_CLIENT_SECRET: "${GOOGLE_OAUTH_CLIENT_SECRET}"
+      FLASK_ENV: development
+    networks:
+      - app-network
+    ports:
+      - "5001:5001"
+
+  order_service:
+    build:
+      context: ./src_api_gateway/order_service
+      dockerfile: Dockerfile
+    depends_on:
+      - auth_service
+    environment:
+      AUTH_SERVICE_URL_REST_API: http://auth_service:5000
+      PORT_FLASK: 5003
+      FLASK_ENV: development
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION}"
+    networks:
+      - app-network
+    ports:
+      - "5003:5003"
+
+  auth_service:
+    build:
+      context: ./src_api_gateway/auth_service
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SECRET_KEY: supersecretkey
+      PORT_FLASK: 5000
+      SESSION_EXPIRE_TIME_SECONDS: 3600
+    networks:
+      - app-network
+    ports:
+      - "5000:5000"
+
+  # dummy_service:
+  #   build:
+  #     context: ./src_api_gateway/dummy_service
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - redis
+  #   environment:
+  #     PORT_FLASK: 5002
+  #     REDIS_HOST: redis
+  #   networks:
+  #     - app-network
+  #   ports:
+  #     - "5002:5002"
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

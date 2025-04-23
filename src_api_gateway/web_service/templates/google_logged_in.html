@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Google Login{% endblock %}
+{% block content %}
+  <h2>Welcome {{ user.name }}!</h2>
+  <p>Your email: {{ user.email }}</p>
+  <p><a href="{{ url_for('dashboard') }}">Go to Dashboard</a></p>
+{% endblock %}

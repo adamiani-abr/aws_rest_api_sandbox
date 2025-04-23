@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+  <h1>Welcome to Your Dashboard</h1>
+  <div class="dashboard-cards">
+    <a href="{{ url_for('my_orders') }}" class="card">My Orders</a>
+    <a href="{{ url_for('place_order') }}" class="card">Place Order</a>
+    <a href="{{ url_for('profile') }}" class="card">Profile</a>
+    <a href="{{ url_for('settings') }}" class="card">Settings</a>
+  </div>
+{% endblock %}

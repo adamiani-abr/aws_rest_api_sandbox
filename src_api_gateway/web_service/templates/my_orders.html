@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}My Orders{% endblock %}
+{% block content %}
+  <h1>Your Orders</h1>
+  <ul>
+    {% for order in orders %}
+      <li>
+        <a href="{{ url_for('edit_order', order_id=order.order_id) }}">{{ order.order_id }}</a>
+        : {{ order['items'] }} (${{ order.total }})
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

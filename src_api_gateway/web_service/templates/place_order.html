@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Place Order{% endblock %}
+{% block content %}
+  <h2>Place a New Order</h2>
+  <form method="post">
+    <label>Items:<br>
+      <input type="text" name="items" required>
+    </label><br>
+    <label>Total:<br>
+      <input type="number" name="total" step="0.01" min="0" required>
+    </label><br>
+    <button type="submit">Submit</button>
+  </form>
+{% endblock %}
