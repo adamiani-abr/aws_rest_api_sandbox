@@ -4,4 +4,3 @@ redis
 flask-login
 requests
 gunicorn
-python-dotenv

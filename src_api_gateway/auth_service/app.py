@@ -3,20 +3,17 @@ import redis
 import os
 import uuid
 import json
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = Flask(__name__)
 
-# Flask Session Configuration
+# * Flask Session Configuration
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_KEY_PREFIX"] = "auth_session:"
 
-# Connect to Redis
+# * Connect to Redis
 try:
     print(f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', 6379)}")
     session_store = redis.Redis(
@@ -25,12 +22,12 @@ try:
         # decode_responses=True,  # Redis responses returned as Python strings instead of raw bytes - for debugging
         decode_responses=False,  # Redis responses returned as raw bytes - must be False if trying to read session data
         socket_timeout=5,
-        ssl=(os.getenv("REDIS_SSL", "False") == "True"),  # must be `True` if connecting to Redis in AWS ElastiCache
+        ssl=(os.getenv("REDIS_SSL", "false") == "true"),  # must be `True` if connecting to Redis in AWS ElastiCache
     )
 except Exception as e:
     print(f"Error connecting to Redis: {e}")
 
-# Simulated user database (Replace with real DB later)
+# * Simulated user database (Replace with real DB later)
 users = {
     "admin": {"password": "password123"},
     "test_user": {"password": "passwordtest"},
