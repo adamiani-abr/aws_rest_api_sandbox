@@ -39,7 +39,7 @@ jobs:
 
     - name: Run tests
       run: |
-        python -m pytest pytest tests/auth_service
-        python -m pytest pytest tests/dummy_service
-        python -m pytest pytest tests/order_service
-        python -m pytest pytest tests/web_service
+        python -m pytest tests/auth_service
+        python -m pytest tests/dummy_service
+        python -m pytest tests/order_service
+        python -m pytest tests/web_service
