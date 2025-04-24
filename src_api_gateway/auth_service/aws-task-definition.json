@@ -1,0 +1,120 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:212135963698:task-definition/sandbox-alex-flask-microsvc-auth-svc:6",
+    "containerDefinitions": [
+        {
+            "name": "auth",
+            "image": "212135963698.dkr.ecr.us-east-1.amazonaws.com/sandbox/flask-microservices/flask-simple-app-auth-svc:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "port-flask-auth",
+                    "containerPort": 5000,
+                    "hostPort": 5000,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "REDIS_HOST",
+                    "value": "sandbox-alex-elasticache-redis-pvt-sbnt-m6dcul.serverless.use1.cache.amazonaws.com"
+                },
+                {
+                    "name": "SECRET_KEY",
+                    "value": "supersecretkey"
+                },
+                {
+                    "name": "PORT_FLASK",
+                    "value": "5000"
+                },
+                {
+                    "name": "REDIS_PORT",
+                    "value": "6379"
+                },
+                {
+                    "name": "REDIS_SSL",
+                    "value": "true"
+                },
+                {
+                    "name": "SESSION_EXPIRE_TIME_SECONDS",
+                    "value": "3600"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/sandbox-alex-flask-microsvc-auth-svc",
+                    "mode": "non-blocking",
+                    "awslogs-create-group": "true",
+                    "max-buffer-size": "25m",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "sandbox-alex-flask-microsvc-auth-svc",
+    "taskRoleArn": "arn:aws:iam::212135963698:role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::212135963698:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 6,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.28"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "3072",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2025-04-23T13:07:54.765Z",
+    "registeredBy": "arn:aws:iam::212135963698:root",
+    "enableFaultInjection": false,
+    "tags": []
+}

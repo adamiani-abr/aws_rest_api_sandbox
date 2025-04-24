@@ -1,0 +1,128 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:212135963698:task-definition/sandbox-alex-flask-microsvc-order-svc:2",
+    "containerDefinitions": [
+        {
+            "name": "orders",
+            "image": "212135963698.dkr.ecr.us-east-1.amazonaws.com/sandbox/flask-microservices/flask-simple-app-order-svc:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "port-flask-orders",
+                    "containerPort": 5003,
+                    "hostPort": 5003,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "AWS_APP_CONFIG_CACHE_TTL",
+                    "value": "60"
+                },
+                {
+                    "name": "PORT_FLASK",
+                    "value": "5003"
+                },
+                {
+                    "name": "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_LAMBDA_AUTHORIZER",
+                    "value": "api_gateway_authorizer_lambda_authorizer"
+                },
+                {
+                    "name": "AUTH_SERVICE_URL_REST_API",
+                    "value": "https://lk354d3w02.execute-api.us-east-1.amazonaws.com/dev/auth"
+                },
+                {
+                    "name": "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE",
+                    "value": "api_gateway_authorizer_ecs_auth_service"
+                },
+                {
+                    "name": "AWS_APP_CONFIG_CONFIG_PROFILE_ID",
+                    "value": "uum6iur"
+                },
+                {
+                    "name": "AWS_APP_CONFIG_APP_ID",
+                    "value": "eaf2841"
+                },
+                {
+                    "name": "AWS_APP_CONFIG_ENV_ID",
+                    "value": "r5l7o9q"
+                }
+            ],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/sandbox-alex-flask-microsvc-order-svc",
+                    "mode": "non-blocking",
+                    "awslogs-create-group": "true",
+                    "max-buffer-size": "25m",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            },
+            "systemControls": []
+        }
+    ],
+    "family": "sandbox-alex-flask-microsvc-order-svc",
+    "taskRoleArn": "arn:aws:iam::212135963698:role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::212135963698:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 2,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+        },
+        {
+            "name": "ecs.capability.execution-role-awslogs"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.28"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "3072",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2025-04-16T19:46:53.538Z",
+    "registeredBy": "arn:aws:iam::212135963698:root",
+    "enableFaultInjection": false,
+    "tags": []
+}

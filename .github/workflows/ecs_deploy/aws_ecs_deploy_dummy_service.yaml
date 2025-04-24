@@ -1,0 +1,113 @@
+# ****************************************************************************************************** #
+# This workflow will build and push a new container image to Amazon ECR,
+# and then will deploy a new task definition to Amazon ECS, when a release is created.
+#
+# Uses whoan/docker-build-with-cache-action to cache the Docker image to
+# speed up build times. Does so by creating a second AWS ECR repo with
+# [-stage] at the end to pull cached images from.
+#
+# Must define the env vars at the top of the file with your specific ones.
+#
+# Must specify the following GitHub secrets:
+#   * AWS_ACCESS_KEY_ID
+#   * AWS_SECRET_ACCESS_KEY
+#
+# To use this workflow, you will need to complete the following set-up steps:
+#
+# 1. Create an ECR repository to store your images.
+#    For example: `aws ecr create-repository --repository-name my-ecr-repo --region us-east-2`.
+#    Replace the value of `ECR_REPOSITORY` in the workflow below with your repository's name.
+#    Replace the value of `aws-region` in the workflow below with your repository's region.
+#
+# 2. Create an ECS task definition, an ECS cluster, and an ECS service.
+#    For example, follow the Getting Started guide on the ECS console:
+#      https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/firstRun
+#    Replace the values for `service` and `cluster` in the workflow below with your service and cluster names.
+#
+# 3. Store your ECS task definition as a JSON file in your repository.
+#    The format should follow the output of `aws ecs register-task-definition --generate-cli-skeleton`.
+#    Replace the value of `task-definition` in the workflow below with your JSON file's name.
+#    Replace the value of `container-name` in the workflow below with the name of the container
+#    in the `containerDefinitions` section of the task definition.
+#
+# 4. Store an IAM user access key in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+#    See the documentation for each action used below for the recommended IAM policies for this IAM user,
+#    and best practices on handling the access key credentials.
+# ****************************************************************************************************** #
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+
+name: Deploy to Amazon ECS - dummy service
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+env:
+    AWS_ECR_CLUSTER_NAME: sandbox-alex-cluster
+    AWS_ECS_SERVICE_NAME: sandbox-alex-flask-microsvc-dummy-svc
+    AWS_ECS_SERVICE_CONTAINER_NAME: dummy
+    AWS_ECR_REPOSITORY_NAME: sandbox/flask-microservices/flask-simple-app-dummy-svc
+    AWS_ECS_TASK_DEFINITION_FILEPATH: ./src_api_gateway/dummy_service/aws-task-definition.json
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_LOG_GROUP: /ecs/sandbox-alex-flask-microsvc-dummy-svc
+    AWS_LOG_STREAM: /ecs/dummy
+    IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@main
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@main
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      working-directory: ./src_api_gateway/web_service
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build a docker container and
+        # push it to ECR so that it can
+        # be deployed to ECS.
+        docker build -t $ECR_REGISTRY/$AWS_ECR_REPOSITORY_NAME:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$AWS_ECR_REPOSITORY_NAME:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$AWS_ECR_REPOSITORY_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@master
+      with:
+        task-definition: ${{ env.AWS_ECS_TASK_DEFINITION_FILEPATH }}
+        container-name: ${{ env.AWS_ECS_SERVICE_CONTAINER_NAME }}
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@master
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.AWS_ECS_SERVICE_NAME }}
+        cluster: ${{ env.AWS_ECR_CLUSTER_NAME }}
+        wait-for-service-stability: true

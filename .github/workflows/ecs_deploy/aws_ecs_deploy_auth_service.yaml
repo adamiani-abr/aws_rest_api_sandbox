@@ -44,7 +44,7 @@
 # To get a newer version, you will need to update the SHA.
 # You can also reference a tag or branch, but the action may change without warning.
 
-name: Deploy to Amazon ECS
+name: Deploy to Amazon ECS - auth service
 
 on:
   release:
@@ -53,13 +53,13 @@ on:
 
 env:
     AWS_ECR_CLUSTER_NAME: sandbox-alex-cluster
-    AWS_ECS_SERVICE_NAME: sandbox-alex-flask-microsvc-web-svc-rest-api
-    AWS_ECS_SERVICE_CONTAINER_NAME: web
-    AWS_ECR_REPOSITORY_NAME: sandbox/flask-microservices/flask-simple-app-web-svc
-    AWS_ECS_TASK_DEFINITION_FILEPATH: ./src_api_gateway/web_service/aws-task-definition.json
+    AWS_ECS_SERVICE_NAME: sandbox-alex-flask-microsvc-auth-svc-v2
+    AWS_ECS_SERVICE_CONTAINER_NAME: auth
+    AWS_ECR_REPOSITORY_NAME: sandbox/flask-microservices/flask-simple-app-auth-svc
+    AWS_ECS_TASK_DEFINITION_FILEPATH: ./src_api_gateway/auth_service/aws-task-definition.json
     AWS_DEFAULT_REGION: us-east-1
-    AWS_LOG_GROUP: /ecs/sandbox-alex-flask-microsvc-web-svc
-    AWS_LOG_STREAM: /ecs/web
+    AWS_LOG_GROUP: /ecs/sandbox-alex-flask-microsvc-auth-svc
+    AWS_LOG_STREAM: /ecs/auth
     IMAGE_TAG: ${{ github.sha }}
 
 jobs:
