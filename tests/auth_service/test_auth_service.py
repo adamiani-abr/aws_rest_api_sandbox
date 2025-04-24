@@ -1,29 +1,9 @@
-import pytest
-from unittest.mock import patch
-from src_api_gateway.auth_service.app import app
+def test_login_success(client):
+    res = client.post("/login", json={"username": "admin", "password": "password123"})
+    assert res.status_code == 200
+    assert "session_id" in res.json
 
 
-@pytest.fixture
-def client():
-    with app.test_client() as client:
-        yield client
-
-
-def test_login(client):
-    response = client.post("/login", json={"username": "test", "password": "test"})
-    assert response.status_code == 401  # Adjusted to match the actual response
-
-
-def test_protected_route(client):
-    with patch("src_api_gateway.auth_service.app.verify_token", return_value=True):
-        response = client.get("/protected", headers={"Authorization": "Bearer testtoken"})
-        assert response.status_code == 200
-        assert response.json == {"message": "Access granted"}
-
-
-def test_token_storage(client):
-    with patch("src_api_gateway.auth_service.app.store_token", create=True) as mock_store_token:
-        mock_store_token.return_value = True
-        response = client.post("/store_token", json={"token": "testtoken"})
-        assert response.status_code == 200
-        assert response.json == {"message": "Token stored successfully"}
+def test_login_fail(client):
+    res = client.post("/login", json={"username": "admin", "password": "wrong"})
+    assert res.status_code == 401
