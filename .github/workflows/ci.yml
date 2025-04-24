@@ -40,7 +40,7 @@ jobs:
 
     - name: Run tests
       env:
-        SECRET_API_KEY: ${{ secrets.SECRET_KEY }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
         REDIS_HOST: ${{ secrets.REDIS_HOST }}
         REDIS_SSL: ${{ secrets.REDIS_SSL }}
         SESSION_EXPIRE_TIME_SECONDS: ${{ secrets.SESSION_EXPIRE_TIME_SECONDS }}
