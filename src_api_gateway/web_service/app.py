@@ -5,7 +5,7 @@ import requests
 from functools import wraps
 from flask_dance.contrib.google import make_google_blueprint, google
 
-from src_api_gateway.web_service.aws_app_config.aws_app_config_client_sandbox_alex import (
+from aws_app_config.aws_app_config_client_sandbox_alex import (
     AWSAppConfigClientSandboxAlex,
 )
 from dotenv import load_dotenv
