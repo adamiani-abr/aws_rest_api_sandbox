@@ -20,10 +20,15 @@ def client() -> Any:
         yield client
 
 
-def test_my_orders_success(client: FlaskClient, requests_mock: Mocker) -> None:
+def test_my_orders_success(client: FlaskClient, requests_mock: Mocker, monkeypatch: MonkeyPatch) -> None:
     """
     test /my-orders route when user is authenticated and orders are available
     """
+    monkeypatch.setattr(
+        "src_api_gateway.web_service.app.aws_app_config_client.get_config_api_gateway_authorizer_ecs_auth_service",
+        lambda: True,
+    )
+
     # * mock auth verify
     requests_mock.post(
         f"{os.environ['AUTH_SERVICE_URL_REST_API']}/verify",
