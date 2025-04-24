@@ -77,6 +77,7 @@ def __get_user_id_from_authorizer() -> Optional[str]:
         print(f"reqeuest.cookies.get(session_id): {request.cookies.get('session_id')}")
     elif aws_app_config_client.get_config_api_gateway_authorizer_lambda_authorizer():
         user_id = request.headers.get("X-User")  # <-- Injected by API Gateway from Lambda authorizer
+        print(f"user_id from Lambda authorizer: {user_id}")
     else:
         user_id = verify_session(request.cookies.get("session_id"))
 

@@ -200,6 +200,7 @@ def settings():
 def my_orders():
     resp = requests.get(f"{AWS_REST_API_URL}/orders", headers=__set_and_get_auth_headers())
     if resp.status_code != 200:
+        print("Failed to fetch orders:", resp.status_code, resp.json())
         return f"Failed to fetch orders. Status code: {resp.status_code}"
     orders = resp.json().get("orders", [])
     return render_template("my_orders.html", orders=orders, current_year=date.today().year)
