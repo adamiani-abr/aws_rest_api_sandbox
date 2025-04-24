@@ -176,6 +176,11 @@ $resp.body
     * `Client ID`
     * `Client secret`
 
+## AWS AppConfig
+
+* feature flags
+* specify to use AWS `lambda authorizer` or AWS ECS `auth_service` for API route authorization
+
 ## Setup Stages
 
 ### V1
