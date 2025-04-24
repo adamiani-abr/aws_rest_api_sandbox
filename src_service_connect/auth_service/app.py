@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify
-import redis
 import os
 import uuid
+
+import redis
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -14,7 +15,9 @@ app.config["SESSION_KEY_PREFIX"] = "auth_session:"
 
 # Connect to Redis
 # try:
-print(f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', 6379)}")
+print(
+    f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', 6379)}"
+)
 session_store = redis.Redis(
     host=os.environ["REDIS_HOST"],
     port=int(os.getenv("REDIS_PORT", 6379)),
@@ -41,7 +44,9 @@ def login():
         session_id = str(uuid.uuid4())
         session_store.setex(
             f"session:{session_id}",
-            int(os.getenv("SESSION_EXPIRE_TIME_SECONDS", 3600)),  # session expires in 1 hour
+            int(
+                os.getenv("SESSION_EXPIRE_TIME_SECONDS", 3600)
+            ),  # session expires in 1 hour
             username,
         )
 
@@ -61,7 +66,9 @@ def verify():
     username = session_store.get(f"session:{session_id}")
 
     if username:
-        username = username.decode("utf-8")  # username retrieved from Redis is in a format that jsonify() does not support
+        username = username.decode(
+            "utf-8"
+        )  # username retrieved from Redis is in a format that jsonify() does not support
         return jsonify({"message": "Valid session", "user": username})
 
     return jsonify({"message": "Invalid session"}), 401

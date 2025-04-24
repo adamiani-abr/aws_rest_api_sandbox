@@ -1,7 +1,8 @@
-from flask import Flask, request, redirect, url_for, make_response
 import os
-import requests
 from functools import wraps
+
+import requests
+from flask import Flask, make_response, redirect, request, url_for
 
 app = Flask(__name__)
 
@@ -20,7 +21,9 @@ def login_required(f):
             return redirect(url_for("login"))
 
         # Verify session with auth service
-        response = requests.post(f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id})
+        response = requests.post(
+            f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id}
+        )
         print(f"decorator - response.status_code: {response.status_code}")
 
         if response.status_code != 200:
@@ -41,7 +44,9 @@ def index():
     session_id = request.cookies.get("session_id")
 
     if session_id:
-        response = requests.post(f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id})
+        response = requests.post(
+            f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id}
+        )
 
         if response.status_code == 200:
             user = response.json().get("user")
@@ -56,7 +61,10 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        response = requests.post(f"{AUTH_SERVICE_URL}/login", json={"username": username, "password": password})
+        response = requests.post(
+            f"{AUTH_SERVICE_URL}/login",
+            json={"username": username, "password": password},
+        )
         print(f"response.status_code: {response.status_code}")
         print(f"json_response: {response.json()}")
 
@@ -64,7 +72,9 @@ def login():
             session_id = response.json().get("session_id")
 
             # resp = make_response(redirect(url_for("dashboard")))
-            resp = make_response(redirect(f"{request.script_root}{url_for('dashboard')}"))
+            resp = make_response(
+                redirect(f"{request.script_root}{url_for('dashboard')}")
+            )
 
             resp.set_cookie(
                 "session_id",
@@ -72,7 +82,9 @@ def login():
                 httponly=True,
                 # secure=True,  # if using HTTPS then must set `secure=True`
                 secure=False,  # if using HTTP then browser will not allow to set secure cookie, must set `secure=False`
-                domain=os.environ["AWS_ALB_DNS_NAME"],  # store session cookie at ALB level so persists updates of ECS service
+                domain=os.environ[
+                    "AWS_ALB_DNS_NAME"
+                ],  # store session cookie at ALB level so persists updates of ECS service
                 path="/",
             )
 

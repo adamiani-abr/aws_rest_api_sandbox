@@ -1,8 +1,16 @@
-from flask import Flask, session, redirect, url_for, request
-from flask_session import Session
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-import redis
 import os
+
+import redis
+from flask import Flask, redirect, request, session, url_for
+from flask_login import (
+    LoginManager,
+    UserMixin,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
+from flask_session import Session
 
 app = Flask(__name__)
 
@@ -14,7 +22,9 @@ app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_KEY_PREFIX"] = "flask_session:"
 
 try:
-    print(f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', 6379)}")
+    print(
+        f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', 6379)}"
+    )
     app.config["SESSION_REDIS"] = redis.Redis(
         host=os.environ["REDIS_HOST"],
         port=int(os.getenv("REDIS_PORT", 6379)),

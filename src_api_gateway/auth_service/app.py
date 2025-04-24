@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify
-import redis
+import json
 import os
 import uuid
-import json
+
+import redis
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -15,14 +16,18 @@ app.config["SESSION_KEY_PREFIX"] = "auth_session:"
 
 # * Connect to Redis
 try:
-    print(f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', 6379)}")
+    print(
+        f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', 6379)}"
+    )
     session_store = redis.Redis(
         host=os.environ["REDIS_HOST"],
         port=int(os.getenv("REDIS_PORT", 6379)),
         # decode_responses=True,  # Redis responses returned as Python strings instead of raw bytes - for debugging
         decode_responses=False,  # Redis responses returned as raw bytes - must be False if trying to read session data
         socket_timeout=5,
-        ssl=(os.getenv("REDIS_SSL", "false") == "true"),  # must be `True` if connecting to Redis in AWS ElastiCache
+        ssl=(
+            os.getenv("REDIS_SSL", "false") == "true"
+        ),  # must be `True` if connecting to Redis in AWS ElastiCache
     )
 except Exception as e:
     print(f"Error connecting to Redis: {e}")
@@ -48,7 +53,9 @@ def login():
         session_id = str(uuid.uuid4())
         session_store.setex(
             f"session:{session_id}",
-            int(os.getenv("SESSION_EXPIRE_TIME_SECONDS", 3600)),  # session expires in 1 hour
+            int(
+                os.getenv("SESSION_EXPIRE_TIME_SECONDS", 3600)
+            ),  # session expires in 1 hour
             json.dumps({"email": username, "name": username, "source": "manual"}),
         )
 
@@ -100,7 +107,9 @@ def verify():
     print(f"session_id: {session_id}")
 
     if username:
-        username = username.decode("utf-8")  # username retrieved from Redis is in a format that jsonify() does not support
+        username = username.decode(
+            "utf-8"
+        )  # username retrieved from Redis is in a format that jsonify() does not support
         print(f"username.decode('utf-8'): {username}")
         return jsonify({"message": "Valid session", "user": username})
 

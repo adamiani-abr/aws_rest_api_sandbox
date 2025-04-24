@@ -1,11 +1,13 @@
-import pytest
-from flask.testing import FlaskClient
-from _pytest.monkeypatch import MonkeyPatch
-from requests_mock.mocker import Mocker
-from src_api_gateway.web_service.app import app
-from dotenv import load_dotenv
 import os
 from typing import Any
+
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
+from dotenv import load_dotenv
+from flask.testing import FlaskClient
+from requests_mock.mocker import Mocker
+
+from src_api_gateway.web_service.app import app
 
 load_dotenv("../../src_api_gateway/web_service/.env")
 
@@ -20,7 +22,9 @@ def client() -> Any:
         yield client
 
 
-def test_my_orders_success(client: FlaskClient, requests_mock: Mocker, monkeypatch: MonkeyPatch) -> None:
+def test_my_orders_success(
+    client: FlaskClient, requests_mock: Mocker, monkeypatch: MonkeyPatch
+) -> None:
     """
     test /my-orders route when user is authenticated and orders are available
     """
@@ -54,7 +58,9 @@ def test_my_orders_success(client: FlaskClient, requests_mock: Mocker, monkeypat
     assert b"abc123" in res.data
 
 
-def test_place_order_success(client: FlaskClient, requests_mock: Mocker, monkeypatch: MonkeyPatch) -> None:
+def test_place_order_success(
+    client: FlaskClient, requests_mock: Mocker, monkeypatch: MonkeyPatch
+) -> None:
     """
     test /place-order with valid form input and auth/session in place
     """
@@ -82,14 +88,20 @@ def test_place_order_success(client: FlaskClient, requests_mock: Mocker, monkeyp
     client.set_cookie("session_id", "dummy-session-id")
 
     # * submit order form
-    res = client.post("/place-order", data={"items": "apple, banana", "total": "10.50"}, follow_redirects=False)
+    res = client.post(
+        "/place-order",
+        data={"items": "apple, banana", "total": "10.50"},
+        follow_redirects=False,
+    )
 
     # * should redirect to my-orders
     assert res.status_code == 302
     assert "/my-orders" in res.headers["Location"]
 
 
-def test_edit_order_success(client: FlaskClient, requests_mock: Mocker, monkeypatch: MonkeyPatch) -> None:
+def test_edit_order_success(
+    client: FlaskClient, requests_mock: Mocker, monkeypatch: MonkeyPatch
+) -> None:
     """
     test /my-orders/<order_id>/edit for a successful order update
     """
@@ -112,14 +124,24 @@ def test_edit_order_success(client: FlaskClient, requests_mock: Mocker, monkeypa
     # * mock order fetch
     requests_mock.get(
         f"{os.environ['ORDER_SERVICE_URL_REST_API']}/orders/{order_id}",
-        json={"order_id": order_id, "items": ["notebook"], "total": 5.0, "status": "created"},
+        json={
+            "order_id": order_id,
+            "items": ["notebook"],
+            "total": 5.0,
+            "status": "created",
+        },
         status_code=200,
     )
 
     # * mock order update
     requests_mock.put(
         f"{os.environ['ORDER_SERVICE_URL_REST_API']}/orders/{order_id}",
-        json={"order_id": order_id, "items": ["notebook", "pen"], "total": 10.0, "status": "shipped"},
+        json={
+            "order_id": order_id,
+            "items": ["notebook", "pen"],
+            "total": 10.0,
+            "status": "shipped",
+        },
         status_code=200,
     )
 

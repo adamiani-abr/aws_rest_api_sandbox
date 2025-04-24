@@ -1,6 +1,7 @@
 import json
-import time
 import logging
+import time
+
 import boto3
 
 # Configure logging for debugging

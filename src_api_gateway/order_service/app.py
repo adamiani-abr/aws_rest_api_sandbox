@@ -1,14 +1,15 @@
-from flask import Flask, request, jsonify
-import uuid
-import time
-import requests
-from typing import Optional, Dict, Any
+import json
 import os
-from dotenv import load_dotenv
+import time
+import uuid
+from typing import Any, Dict, Optional
+
+import requests
 from aws_app_config.aws_app_config_client_sandbox_alex import (
     AWSAppConfigClientSandboxAlex,
 )
-import json
+from dotenv import load_dotenv
+from flask import Flask, jsonify, request
 
 # * Load environment variables from a .env file
 load_dotenv(dotenv_path="src_api_gateway/.env")
@@ -18,7 +19,9 @@ app = Flask(__name__)
 # * AWS AppConfigClient instance - for feature flags
 aws_app_config_client = AWSAppConfigClientSandboxAlex()
 
-AUTH_SERVICE_URL = os.environ["AUTH_SERVICE_URL_REST_API"]  # URL of the authentication service
+AUTH_SERVICE_URL = os.environ[
+    "AUTH_SERVICE_URL_REST_API"
+]  # URL of the authentication service
 
 # In-memory store: user_id -> {order_id -> order_data}
 ORDERS: Dict[str, Dict[str, Dict[str, Any]]] = {
@@ -76,7 +79,9 @@ def __get_user_id_from_authorizer() -> Optional[str]:
         print(f"request.cookies: {request.cookies}")
         print(f"reqeuest.cookies.get(session_id): {request.cookies.get('session_id')}")
     elif aws_app_config_client.get_config_api_gateway_authorizer_lambda_authorizer():
-        user_id = request.headers.get("X-User")  # <-- Injected by API Gateway from Lambda authorizer
+        user_id = request.headers.get(
+            "X-User"
+        )  # <-- Injected by API Gateway from Lambda authorizer
         print(f"user_id from Lambda authorizer: {user_id}")
     else:
         user_id = verify_session(request.cookies.get("session_id"))
@@ -107,7 +112,9 @@ def get_order(order_id: str) -> Any:
     print(f"/orders - GET - user_id: {user_id}")
 
     if not user_id:
-        return jsonify({"message": "Unauthorized"}), 401  # 401: Client is not authenticated
+        return jsonify(
+            {"message": "Unauthorized"}
+        ), 401  # 401: Client is not authenticated
 
     order = ORDERS.get(user_id, {}).get(order_id)
 
@@ -125,7 +132,9 @@ def create_order() -> Any:
     print(f"/orders - POST - user_id: {user_id}")
 
     if not user_id:
-        return jsonify({"message": "Unauthorized"}), 401  # 401: Client is not authenticated
+        return jsonify(
+            {"message": "Unauthorized"}
+        ), 401  # 401: Client is not authenticated
 
     data: Dict[str, Any] = request.json or {}
     order_id = str(uuid.uuid4())
@@ -145,7 +154,9 @@ def create_order() -> Any:
         ORDERS[user_id] = {}
 
     ORDERS[user_id][order_id] = order
-    return jsonify({"order_id": order_id, "message": "Order created"}), 201  # 201: Resource created
+    return jsonify(
+        {"order_id": order_id, "message": "Order created"}
+    ), 201  # 201: Resource created
 
 
 @app.route("/orders/<order_id>", methods=["PUT"])
@@ -181,7 +192,9 @@ def delete_order(order_id: str) -> Any:
     user_id = __get_user_id_from_authorizer()
 
     if not user_id:
-        return jsonify({"message": "Unauthorized"}), 401  # 401: Client is not authenticated
+        return jsonify(
+            {"message": "Unauthorized"}
+        ), 401  # 401: Client is not authenticated
 
     user_orders = ORDERS.get(user_id, {})
     if order_id not in user_orders:

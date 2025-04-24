@@ -1,14 +1,22 @@
-from flask import Flask, request, redirect, url_for, make_response, render_template, session
-from datetime import date
 import os
-import requests
+from datetime import date
 from functools import wraps
-from flask_dance.contrib.google import make_google_blueprint, google
 
+import requests
 from aws_app_config.aws_app_config_client_sandbox_alex import (
     AWSAppConfigClientSandboxAlex,
 )
 from dotenv import load_dotenv
+from flask import (
+    Flask,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from flask_dance.contrib.google import google, make_google_blueprint
 
 load_dotenv()
 
@@ -33,11 +41,15 @@ google_bp = make_google_blueprint(
 app.register_blueprint(google_bp, url_prefix="/login")
 
 # Configurations
-AUTH_SERVICE_URL = os.environ["AUTH_SERVICE_URL_REST_API"]  # URL of the authentication service
+AUTH_SERVICE_URL = os.environ[
+    "AUTH_SERVICE_URL_REST_API"
+]  # URL of the authentication service
 AWS_REST_API_URL = os.environ["ORDER_SERVICE_URL_REST_API"]
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # Allow HTTP for local testing with oAuthlib
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = (
+    "1"  # Allow HTTP for local testing with oAuthlib
+)
 
 
 # Decorator for session validation
@@ -53,7 +65,9 @@ def login_required(f):
             return redirect(url_for("login"))
 
         # * Verify session with auth service
-        response = requests.post(f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id})
+        response = requests.post(
+            f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id}
+        )
         print(f"decorator - response.status_code: {response.status_code}")
         print(f"json_response: {response.json()}")
 
@@ -88,7 +102,11 @@ def google_logged_in():
 
     session_id = auth_response.json()["session_id"]
 
-    response = make_response(render_template("google_logged_in.html", user=user_info, current_year=date.today().year))
+    response = make_response(
+        render_template(
+            "google_logged_in.html", user=user_info, current_year=date.today().year
+        )
+    )
 
     response.set_cookie(
         "session_id",
@@ -108,10 +126,14 @@ def index():
     session_id = request.cookies.get("session_id")
     if session_id:
         try:
-            response = requests.post(f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id}, timeout=3)
+            response = requests.post(
+                f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id}, timeout=3
+            )
             if response.status_code == 200:
                 user = response.json().get("user")
-                return render_template("index.html", user=user, current_year=date.today().year)
+                return render_template(
+                    "index.html", user=user, current_year=date.today().year
+                )
         except requests.RequestException:
             pass
     return render_template("index.html", user=None, current_year=date.today().year)
@@ -198,22 +220,30 @@ def settings():
 @app.route("/my-orders")
 @login_required
 def my_orders():
-    resp = requests.get(f"{AWS_REST_API_URL}/orders", headers=__set_and_get_auth_headers())
+    resp = requests.get(
+        f"{AWS_REST_API_URL}/orders", headers=__set_and_get_auth_headers()
+    )
     if resp.status_code != 200:
         print("Failed to fetch orders:", resp.status_code, resp.json())
         return f"Failed to fetch orders. Status code: {resp.status_code}"
     orders = resp.json().get("orders", [])
-    return render_template("my_orders.html", orders=orders, current_year=date.today().year)
+    return render_template(
+        "my_orders.html", orders=orders, current_year=date.today().year
+    )
 
 
 @app.route("/my-orders/<order_id>")
 @login_required
 def get_order_detail(order_id):
-    resp = requests.get(f"{AWS_REST_API_URL}/orders/{order_id}", headers=__set_and_get_auth_headers())
+    resp = requests.get(
+        f"{AWS_REST_API_URL}/orders/{order_id}", headers=__set_and_get_auth_headers()
+    )
     if resp.status_code == 404:
         return f"Order {order_id} not found."
     order = resp.json()
-    return render_template("order_detail.html", order=order, current_year=date.today().year)
+    return render_template(
+        "order_detail.html", order=order, current_year=date.today().year
+    )
 
 
 @app.route("/place-order", methods=["GET", "POST"])
@@ -293,7 +323,9 @@ def edit_order(order_id):
             return f"Failed to load order (status {resp.status_code})."
         order = resp.json()
 
-    return render_template("edit_order.html", order=order, errors=errors, current_year=date.today().year)
+    return render_template(
+        "edit_order.html", order=order, errors=errors, current_year=date.today().year
+    )
 
 
 @app.route("/logout")
@@ -304,7 +336,9 @@ def logout():
     print(f"session_id: {session_id}")
 
     if session_id:
-        response = requests.post(f"{AUTH_SERVICE_URL}/logout", json={"session_id": session_id})
+        response = requests.post(
+            f"{AUTH_SERVICE_URL}/logout", json={"session_id": session_id}
+        )
 
         print(f"response.status_code: {response.status_code}")
         print(f"json_response: {response.json()}")

@@ -1,5 +1,6 @@
-from aws_app_config.aws_app_config_client import AWSAppConfigClient
 import os
+
+from aws_app_config.aws_app_config_client import AWSAppConfigClient
 from dotenv import load_dotenv
 
 load_dotenv()

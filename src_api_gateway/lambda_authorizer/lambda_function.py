@@ -1,5 +1,6 @@
-import redis
 import os
+
+import redis
 
 # REDIS_HOST = "sandbox-alex-elasticache-redis-pvt-sbnt-m6dcul.serverless.use1.cache.amazonaws.com"
 # r = redis.Redis(host=REDIS_HOST, port=6379, decode_responses=False, )
