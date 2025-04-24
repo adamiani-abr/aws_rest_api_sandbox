@@ -9,6 +9,10 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  AUTH_SERVICE_URL_REST_API: "https://lk354d3w02.execute-api.us-east-1.amazonaws.com/dev/auth"
+  ORDER_SERVICE_URL_REST_API: "https://lk354d3w02.execute-api.us-east-1.amazonaws.com/dev/orders"
+
 jobs:
   test:
     runs-on: ubuntu-latest
