@@ -54,6 +54,7 @@ on:
 env:
     AWS_ECR_CLUSTER_NAME: sandbox-alex-cluster
     AWS_ECS_SERVICE_NAME: sandbox-alex-flask-microsvc-web-svc-rest-api
+    AWS_ECS_SERVICE_CONTAINER_NAME: web
     AWS_ECR_REPOSITORY_NAME: sandbox/flask-microservices/flask-simple-app-web-svc
     AWS_ECS_TASK_DEFINITION_FILEPATH: ./src_api_gateway/web_service/aws-task-definition.json
     AWS_DEFAULT_REGION: us-east-1
@@ -100,7 +101,7 @@ jobs:
       uses: aws-actions/amazon-ecs-render-task-definition@master
       with:
         task-definition: ${{ env.AWS_ECS_TASK_DEFINITION_FILEPATH }}
-        container-name: ${{ env.AWS_ECR_REPOSITORY_NAME }}
+        container-name: ${{ env.AWS_ECS_SERVICE_CONTAINER_NAME }}
         image: ${{ steps.build-image.outputs.image }}
 
     - name: Deploy Amazon ECS task definition
