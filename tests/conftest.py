@@ -1,9 +1,8 @@
 import pytest
-from app import app
+import requests_mock
 
 
 @pytest.fixture
-def client():
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
+def mock_api():
+    with requests_mock.Mocker() as m:
+        yield m

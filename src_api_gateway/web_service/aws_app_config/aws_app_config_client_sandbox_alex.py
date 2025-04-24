@@ -1,4 +1,4 @@
-from aws_app_config.aws_app_config_client import AWSAppConfigClient
+from src_api_gateway.web_service.aws_app_config.aws_app_config_client import AWSAppConfigClient
 import os
 from dotenv import load_dotenv
 
@@ -10,15 +10,11 @@ class AWSAppConfigClientSandboxAlex(AWSAppConfigClient):
     __AWS_APP_CONFIG_ENV_ID = os.environ["AWS_APP_CONFIG_ENV_ID"]
     __AWS_APP_CONFIG_CONFIG_PROFILE_ID = os.environ["AWS_APP_CONFIG_CONFIG_PROFILE_ID"]
     __AWS_APP_CONFIG_CACHE_TTL = int(os.environ.get("AWS_APP_CONFIG_CACHE_TTL", 60))
-    __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE = (
-        os.environ.get(
-            "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE",
-        )
+    __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE = os.environ.get(
+        "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE",
     )
-    __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_ECS_LAMBDA_AUTHORIZER = (
-        os.environ.get(
-            "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_LAMBDA_AUTHORIZER",
-        )
+    __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_ECS_LAMBDA_AUTHORIZER = os.environ.get(
+        "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_LAMBDA_AUTHORIZER",
     )
 
     def __init__(self):
