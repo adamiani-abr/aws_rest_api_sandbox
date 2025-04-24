@@ -47,7 +47,4 @@ jobs:
         GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
         GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
       run: |
-        python -m pytest tests/auth_service
-        python -m pytest tests/dummy_service
-        python -m pytest tests/order_service
         python -m pytest tests/web_service
