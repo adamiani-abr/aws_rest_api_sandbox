@@ -48,33 +48,27 @@ def test_get_order_authorized():
     # Additional assertions can verify response content if needed.
 
 
-# def test_get_order_without_token():
-#     """
-#     Tests that accessing the endpoint without an Authorization header is rejected.
-#     """
-#     response = requests.get(f"{ORDER_SERVICE_URL_REST_API}/orders/123")
-#     assert response.status_code in (
-#         401,
-#         403,
-#     ), f"Expected 401/403, got {response.status_code}"
+def test_get_order_without_token():
+    """
+    Tests that accessing the endpoint without an Authorization header is rejected.
+    """
+    response = requests.get(f"{ORDER_SERVICE_URL_REST_API}/orders/123")
+    assert response.status_code in (401, 403), f"Expected 401/403, got {response.status_code}"
 
 
-# def test_get_order_with_invalid_token():
-#     """
-#     Tests that an invalid token (i.e., one not present in Redis) is correctly rejected.
-#     """
-#     invalid_token = "invalid-token"
-#     headers = {"Authorization": f"Bearer {invalid_token}"}
-#     response = requests.get(f"{ORDER_SERVICE_URL_REST_API}/orders/123", headers=headers)
-#     assert response.status_code in (
-#         401,
-#         403,
-#     ), f"Expected 401/403 for invalid token, got {response.status_code}"
+def test_get_order_with_invalid_token():
+    """
+    Tests that an invalid token (i.e., one not present in Redis) is correctly rejected.
+    """
+    invalid_token = "invalid-token"
+    headers = {"Authorization": f"Bearer {invalid_token}"}
+    response = requests.get(f"{ORDER_SERVICE_URL_REST_API}/orders/123", headers=headers)
+    assert response.status_code in (401, 403), f"Expected 401/403 for invalid token, got {response.status_code}"
 
 
-# # Optionally, you may run tests manually:
-# if __name__ == "__main__":
-#     test_get_order_authorized()
-#     test_get_order_without_token()
-#     test_get_order_with_invalid_token()
-#     print("All tests passed!")
+# Optionally, you may run tests manually:
+if __name__ == "__main__":
+    test_get_order_authorized()
+    test_get_order_without_token()
+    test_get_order_with_invalid_token()
+    print("All tests passed!")

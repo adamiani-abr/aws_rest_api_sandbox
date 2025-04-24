@@ -61,6 +61,7 @@ env:
     AWS_LOG_GROUP: /ecs/sandbox-alex-flask-microsvc-web-svc
     AWS_LOG_STREAM: /ecs/web
     IMAGE_TAG: ${{ github.sha }}
+    WORKING_DIRECTORY: ./src_api_gateway/web_service  # path to the Dockerfile and source code to push to ECR
 
 jobs:
   deploy:
@@ -84,7 +85,7 @@ jobs:
 
     - name: Build, tag, and push image to Amazon ECR
       id: build-image
-      working-directory: ./src_api_gateway/web_service
+      working-directory: ${{ env.WORKING_DIRECTORY }}
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
