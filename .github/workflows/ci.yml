@@ -33,14 +33,78 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Cache dependencies (linux)
+      uses: actions/cache@main
+      if: startsWith(runner.os, 'Linux')
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Cache dependencies (windows)
+      uses: actions/cache@main
+      if: startsWith(runner.os, 'Windows')
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install pytest pytest-mock requests_mock
-        pip install -r src_api_gateway/auth_service/requirements.txt
-        pip install -r src_api_gateway/dummy_service/requirements.txt
-        pip install -r src_api_gateway/order_service/requirements.txt
-        pip install -r src_api_gateway/web_service/requirements.txt
+        python -m pip install --upgrade uv  # faster way to install dependencies
+        python -m uv pip install flake8 mypy isort pytest bandit pylint interrogate wheel setuptools --system
+        python -m uv pip install pytest pytest-mock requests_mock
+
+        # flake8-pyproject - for loading flake8 with toml config (https://github.com/microsoft/vscode-flake8/issues/135)
+        python -m uv pip install flake8-pyproject --system
+
+        python -m uv pip install -r src_api_gateway/auth_service/requirements.txt
+        python -m uv pip install -r src_api_gateway/dummy_service/requirements.txt
+        python -m uv pip install -r src_api_gateway/order_service/requirements.txt
+        python -m uv pip install -r src_api_gateway/web_service/requirements.txt
+
+    - name: Lint with flake8
+      id: flake8
+      continue-on-error: true  # will check failure after
+      run: |
+        if [ -f "pyproject.toml" ]; then flake8 --toml-config=pyproject.toml .; else flake8 .; fi
+
+    - name: Lint with mypy
+      id: mypy
+      continue-on-error: true  # will check failure after
+      run: |
+        mypy .
+
+    - name: Lint with pylint  # must have __init__.py in top directory to run recursively
+      id: pylint
+      continue-on-error: true  # will check failure after
+      run: |
+        pylint *
+
+    - name: Lint with interrogate (docstring checker)
+      id: interrogate
+      continue-on-error: true  # will check failure after
+      run: |
+        interrogate .
+
+    - name: Lint with isort
+      run: |
+        # --diff: Prints a diff of all the changes isort would make to a file
+        isort . --diff;
+        echo $"isort_errors";
+
+    - name: check any `flake8`, `mypy`, `pylint`, `interrogate` checks failed
+      if: |
+        (steps.flake8.outcome != 'success') ||
+        (steps.mypy.outcome != 'success') ||
+        (steps.pylint.outcome != 'success') ||
+        (steps.interrogate.outcome != 'success')
+      run: |
+        echo "one or all of flake8, mypy, pylint, or interrogate failed"
+        exit 1
 
     - name: Run tests
       env:
@@ -53,3 +117,7 @@ jobs:
         AWS_DEFAULT_REGION: "us-east-1"
       run: |
         python -m pytest tests/web_service
+
+    - name: Run bandit (security checks)
+      run: |
+        if [ -f "pyproject.toml" ]; then bandit -r . -c "pyproject.toml"; fi
