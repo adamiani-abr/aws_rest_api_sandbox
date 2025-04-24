@@ -46,5 +46,6 @@ jobs:
         SESSION_EXPIRE_TIME_SECONDS: ${{ secrets.SESSION_EXPIRE_TIME_SECONDS }}
         GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
         GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+        AWS_DEFAULT_REGION: "us-east-1"
       run: |
         python -m pytest tests/web_service
