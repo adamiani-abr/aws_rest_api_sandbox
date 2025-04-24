@@ -20,15 +20,7 @@ def client() -> Any:
         yield client
 
 
-@pytest.fixture
-def mock_env_user(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setenv("AWS_APP_CONFIG_APP_ID", "")
-    monkeypatch.setenv("AWS_APP_CONFIG_ENV_ID", "")
-    monkeypatch.setenv("AWS_APP_CONFIG_CONFIG_PROFILE_ID", "")
-    monkeypatch.setenv("AWS_APP_CONFIG_CACHE_TTL", 60)
-
-
-def test_my_orders_success(client: FlaskClient, requests_mock: Mocker, mock_env_user: None) -> None:
+def test_my_orders_success(client: FlaskClient, requests_mock: Mocker) -> None:
     """
     test /my-orders route when user is authenticated and orders are available
     """
@@ -57,9 +49,7 @@ def test_my_orders_success(client: FlaskClient, requests_mock: Mocker, mock_env_
     assert b"abc123" in res.data
 
 
-def test_place_order_success(
-    client: FlaskClient, requests_mock: Mocker, mock_env_user: None, monkeypatch: MonkeyPatch
-) -> None:
+def test_place_order_success(client: FlaskClient, requests_mock: Mocker, monkeypatch: MonkeyPatch) -> None:
     """
     test /place-order with valid form input and auth/session in place
     """
@@ -94,7 +84,7 @@ def test_place_order_success(
     assert "/my-orders" in res.headers["Location"]
 
 
-def test_edit_order_success(client: FlaskClient, requests_mock: Mocker, mock_env_user: None, monkeypatch: MonkeyPatch) -> None:
+def test_edit_order_success(client: FlaskClient, requests_mock: Mocker, monkeypatch: MonkeyPatch) -> None:
     """
     test /my-orders/<order_id>/edit for a successful order update
     """
