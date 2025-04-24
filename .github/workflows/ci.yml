@@ -32,7 +32,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install pytest pytest-mock
+        python -m pip install pytest pytest-mock requests_mock
         pip install -r src_api_gateway/auth_service/requirements.txt
         pip install -r src_api_gateway/dummy_service/requirements.txt
         pip install -r src_api_gateway/order_service/requirements.txt
