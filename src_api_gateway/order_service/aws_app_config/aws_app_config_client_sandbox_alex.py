@@ -1,28 +1,28 @@
 import os
+from typing import Optional
 
-from aws_app_config.aws_app_config_client import AWSAppConfigClient
 from dotenv import load_dotenv
+
+from src_api_gateway.web_service.aws_app_config.aws_app_config_client import AWSAppConfigClient
 
 load_dotenv()
 
 
 class AWSAppConfigClientSandboxAlex(AWSAppConfigClient):
-    __AWS_APP_CONFIG_APP_ID = os.environ["AWS_APP_CONFIG_APP_ID"]
-    __AWS_APP_CONFIG_ENV_ID = os.environ["AWS_APP_CONFIG_ENV_ID"]
-    __AWS_APP_CONFIG_CONFIG_PROFILE_ID = os.environ["AWS_APP_CONFIG_CONFIG_PROFILE_ID"]
-    __AWS_APP_CONFIG_CACHE_TTL = int(os.environ.get("AWS_APP_CONFIG_CACHE_TTL", 60))
-    __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE = (
-        os.environ.get(
-            "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE",
-        )
+    """AWS AppConfig client for the sandbox environment."""
+
+    __AWS_APP_CONFIG_APP_ID = os.getenv("AWS_APP_CONFIG_APP_ID", "")
+    __AWS_APP_CONFIG_ENV_ID = os.getenv("AWS_APP_CONFIG_ENV_ID", "")
+    __AWS_APP_CONFIG_CONFIG_PROFILE_ID = os.getenv("AWS_APP_CONFIG_CONFIG_PROFILE_ID", "")
+    __AWS_APP_CONFIG_CACHE_TTL = int(os.environ.get("AWS_APP_CONFIG_CACHE_TTL", "60"))
+    __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE = os.environ.get(
+        "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE", ""
     )
-    __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_ECS_LAMBDA_AUTHORIZER = (
-        os.environ.get(
-            "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_LAMBDA_AUTHORIZER",
-        )
+    __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_ECS_LAMBDA_AUTHORIZER = os.environ.get(
+        "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_LAMBDA_AUTHORIZER", ""
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes the AppConfig client with caching.
         :param app_id: AWS AppConfig Application ID.
@@ -37,7 +37,7 @@ class AWSAppConfigClientSandboxAlex(AWSAppConfigClient):
             AWSAppConfigClientSandboxAlex.__AWS_APP_CONFIG_CACHE_TTL,
         )
 
-    def get_config_value_by_key(self, key: str) -> str:
+    def get_config_value_by_key(self, key: str) -> Optional[str]:
         """
         Retrieves a specific key's value from the configuration.
         :param config_name: Name of the configuration to retrieve.
@@ -49,7 +49,7 @@ class AWSAppConfigClientSandboxAlex(AWSAppConfigClient):
             return config[key]
         return None
 
-    def get_config_api_gateway_authorizer_ecs_auth_service(self) -> dict:
+    def get_config_api_gateway_authorizer_ecs_auth_service(self) -> Optional[str]:
         """
         Retrieves the configuration from AWS AppConfig.
         :param config_name: Name of the configuration to retrieve.
@@ -59,7 +59,7 @@ class AWSAppConfigClientSandboxAlex(AWSAppConfigClient):
             AWSAppConfigClientSandboxAlex.__AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE,
         )
 
-    def get_config_api_gateway_authorizer_lambda_authorizer(self) -> dict:
+    def get_config_api_gateway_authorizer_lambda_authorizer(self) -> Optional[str]:
         """
         Retrieves the configuration from AWS AppConfig.
         :param config_name: Name of the configuration to retrieve.

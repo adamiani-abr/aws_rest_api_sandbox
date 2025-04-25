@@ -1,15 +1,17 @@
 import json
 import logging
 import time
+from typing import Dict, Optional
 
 import boto3
 
-# Configure logging for debugging
 logging.basicConfig(level=logging.INFO)
 
 
 class AWSAppConfigClient:
-    def __init__(self, app_id, env_id, config_profile_id, ttl=60):
+    """AWS AppConfig client with caching."""
+
+    def __init__(self, app_id: str, env_id: str, config_profile_id: str, ttl: int = 60):
         """
         Initializes the AppConfig client with caching.
         :param app_id: AWS AppConfig Application ID.
@@ -22,11 +24,13 @@ class AWSAppConfigClient:
         self.config_profile_id = config_profile_id
         self.ttl = ttl
         self.last_fetched = 0
-        self.flags = {}
-        self.client = boto3.client("appconfigdata")
+        self.client = boto3.client("appconfigdata")  # type: ignore
         self.configuration_token = None
 
-    def _start_configuration_session(self):
+        # * {'api_gateway_authorizer_ecs_auth_service': {'enabled': False}, '...': {'enabled': True}, ...}
+        self.flags: Dict[str, Dict[str, bool]] = {}
+
+    def _start_configuration_session(self) -> Optional[str]:
         """
         Starts a new configuration session and obtains the initial token.
         """
@@ -39,7 +43,7 @@ class AWSAppConfigClient:
         self.configuration_token = response.get("InitialConfigurationToken")
         return self.configuration_token
 
-    def _fetch_configuration(self):
+    def _fetch_configuration(self) -> None:
         """
         Uses the configuration token to fetch the latest configuration.
         Updates the internal cache if new configuration is retrieved.
@@ -49,9 +53,7 @@ class AWSAppConfigClient:
             self._start_configuration_session()
 
         print("Fetching latest AppConfig configuration")
-        response = self.client.get_latest_configuration(
-            ConfigurationToken=self.configuration_token
-        )
+        response = self.client.get_latest_configuration(ConfigurationToken=self.configuration_token)
 
         # 'Configuration' is a streaming body that needs to be read.
         config_data = response.get("Configuration").read()
@@ -63,7 +65,7 @@ class AWSAppConfigClient:
                 # * {'api_gateway_authorizer_ecs_auth_service': False, '...': True, ...}
                 self.flags = {k: v["enabled"] for k, v in config_json.items()}
 
-                self.last_fetched = time.time()
+                self.last_fetched = time.time()  # type: ignore
                 # print("AppConfig configuration updated: %s", self.flags)
             except json.JSONDecodeError as e:
                 logging.error("Error decoding AppConfig configuration: %s", e)
@@ -71,7 +73,7 @@ class AWSAppConfigClient:
             # print("No new configuration data received.")
             pass
 
-    def get_flags(self):
+    def get_flags(self) -> dict:
         """
         Returns the cached feature flags, fetching from AppConfig if needed.
         """

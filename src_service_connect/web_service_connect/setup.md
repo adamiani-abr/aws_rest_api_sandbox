@@ -18,10 +18,10 @@ app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_KEY_PREFIX"] = "flask_session:"
 
 try:
-    print(f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', 6379)}")
+    print(f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', "6379")}")
     app.config["SESSION_REDIS"] = redis.Redis(
         host=os.environ["REDIS_HOST"],
-        port=int(os.getenv("REDIS_PORT", 6379)),
+        port=int(os.getenv("REDIS_PORT", "6379")),
         # decode_responses=True,  # all responses from Redis are returned as Python strings instead of raw bytes
         decode_responses=False,  # all responses from Redis are returned as raw bytes
         socket_timeout=5,  # timeout for Redis connection

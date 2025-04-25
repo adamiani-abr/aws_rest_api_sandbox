@@ -1,86 +1,86 @@
 import json
 import os
 import uuid
+from typing import Dict, Optional, Tuple
 
 import redis
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 
+# * create the Flask app
 app = Flask(__name__)
 
-# * Flask Session Configuration
+# * flask session configuration
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_KEY_PREFIX"] = "auth_session:"
 
-# * Connect to Redis
+# * connect to redis
 try:
-    print(
-        f"Connecting to Redis at {os.environ['REDIS_HOST']}:{os.getenv('REDIS_PORT', 6379)}"
-    )
+    redis_host = os.environ["REDIS_HOST"]
+    redis_port = int(os.getenv("REDIS_PORT", "6379"))
+    print(f"connecting to redis at {redis_host}:{redis_port}")
+
     session_store = redis.Redis(
-        host=os.environ["REDIS_HOST"],
-        port=int(os.getenv("REDIS_PORT", 6379)),
-        # decode_responses=True,  # Redis responses returned as Python strings instead of raw bytes - for debugging
-        decode_responses=False,  # Redis responses returned as raw bytes - must be False if trying to read session data
+        host=redis_host,
+        port=redis_port,
+        decode_responses=False,
         socket_timeout=5,
-        ssl=(
-            os.getenv("REDIS_SSL", "false") == "true"
-        ),  # must be `True` if connecting to Redis in AWS ElastiCache
+        ssl=(os.getenv("REDIS_SSL", "false") == "true"),
     )
 except Exception as e:
-    print(f"Error connecting to Redis: {e}")
+    print(f"error connecting to redis: {e}")
 
-# * Simulated user database (Replace with real DB later)
-users = {
+# * simulated user database
+users: Dict[str, Dict[str, str]] = {
     "admin": {"password": "password123"},
     "test_user": {"password": "passwordtest"},
 }
 
 
 @app.route("/login", methods=["POST"])
-def login():
+def login() -> Tuple[Response, int]:
+    """
+    login route to authenticate a user and create a session in redis
+    """
     print("auth service - login()")
-    data = request.json
+    data: Dict[str, str] = request.json or {}
 
     username = data.get("username")
     password = data.get("password")
 
     if username in users and users[username]["password"] == password:
-        print(f"User {username} authenticated successfully.")
-        # Create a session ID and store it in Redis
+        # print(f"user {username} authenticated successfully")
         session_id = str(uuid.uuid4())
         session_store.setex(
             f"session:{session_id}",
-            int(
-                os.getenv("SESSION_EXPIRE_TIME_SECONDS", 3600)
-            ),  # session expires in 1 hour
+            int(os.getenv("SESSION_EXPIRE_TIME_SECONDS", "3600")),
             json.dumps({"email": username, "name": username, "source": "manual"}),
         )
+        # print(f"session created for {username}: {session_id}")
+        return jsonify({"message": "login successful", "session_id": session_id}), 200
 
-        print(f"Session created for {username}: {session_id}")
-
-        return jsonify({"message": "Login successful", "session_id": session_id})
-
-    return jsonify({"message": "Invalid credentials"}), 401
+    return jsonify({"message": "invalid credentials"}), 401
 
 
 @app.route("/store_google_user_info", methods=["POST"])
-def store_google_user_info():
+def store_google_user_info() -> Tuple[Response, int]:
+    """
+    create a session using google auth user info
+    """
     print("auth service - store_google_user_info()")
     try:
-        data = request.json
+        data: Dict[str, str] = request.json or {}
         email = data["email"]
         name = data["name"]
 
-        # Create a new session
         session_id = str(uuid.uuid4())
         session_data = {"email": email, "name": name, "source": "google"}
 
         session_store.setex(
             f"session:{session_id}",
-            int(os.getenv("SESSION_EXPIRE_TIME_SECONDS", 3600)),
+            int(os.getenv("SESSION_EXPIRE_TIME_SECONDS", "3600")),
             json.dumps(session_data),
         )
 
@@ -90,43 +90,44 @@ def store_google_user_info():
 
 
 @app.route("/verify", methods=["POST"])
-def verify():
-    print("Verifying session...")
-
-    data = request.json
+def verify() -> Tuple[Response, int]:
+    """
+    verify session by checking redis for the given session_id
+    """
+    print("verifying session...")
+    data: Dict[str, str] = request.json or {}
     session_id = data.get("session_id")
 
-    print(f"session_id: {session_id}")
+    # print(f"session_id: {session_id}")
 
     if not session_id:
-        return jsonify({"message": "Session ID required"}), 400
+        return jsonify({"message": "session ID required"}), 400
 
-    username = session_store.get(f"session:{session_id}")
-
-    print(f"username: {username}")
-    print(f"session_id: {session_id}")
+    username: Optional[bytes] = session_store.get(f"session:{session_id}")  # type: ignore
+    # print(f"username: {username}")
 
     if username:
-        username = username.decode(
-            "utf-8"
-        )  # username retrieved from Redis is in a format that jsonify() does not support
-        print(f"username.decode('utf-8'): {username}")
-        return jsonify({"message": "Valid session", "user": username})
+        decoded = username.decode("utf-8")
+        # print(f"decoded username: {decoded}")
+        return jsonify({"message": "valid session", "user": decoded}), 200
 
-    return jsonify({"message": "Invalid session"}), 401
+    return jsonify({"message": "invalid session"}), 401
 
 
 @app.route("/logout", methods=["POST"])
-def logout():
-    data = request.json
+def logout() -> Tuple[Response, int]:
+    """
+    logout route to delete the session from redis
+    """
+    data: Dict[str, str] = request.json or {}
     session_id = data.get("session_id")
 
     if session_id:
         session_store.delete(f"session:{session_id}")
-        return jsonify({"message": "Logged out successfully"})
+        return jsonify({"message": "logged out successfully"}), 200
 
-    return jsonify({"message": "Invalid session ID"}), 400
+    return jsonify({"message": "invalid session ID"}), 400
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT_FLASK", 5000)))
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT_FLASK", "5000")))
