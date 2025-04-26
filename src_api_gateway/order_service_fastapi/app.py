@@ -7,7 +7,7 @@ import requests
 import uvicorn
 from aws_app_config.aws_app_config_client_sandbox_alex import AWSAppConfigClientSandboxAlex
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
+from fastapi import Cookie, Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -64,7 +64,25 @@ class OrdersListResponse(BaseModel):
 
 
 # * Session verification dependency
-def get_user_id(session_id: Optional[str] = None, x_user: Optional[str] = Header(None), request: Request = None) -> str:
+def get_user_id(
+    request: Request,
+    session_id: Optional[str] = Cookie(default=None),
+    x_user: Optional[str] = Header(default=None),
+) -> str:
+    """
+    Dependency to retrieve and verify the authenticated user's ID.
+
+    Depending on the AppConfig flags:
+    - If using ECS auth service, it validates session_id from cookies.
+    - If using Lambda authorizer, it reads X-User from headers.
+    - Falls back to cookie session verification if no config matches.
+
+    Raises:
+        HTTPException: If user authentication fails.
+
+    Returns:
+        str: Authenticated user's ID (typically email).
+    """
     user_id = None
 
     if aws_app_config_client.get_config_api_gateway_authorizer_ecs_auth_service():
@@ -82,6 +100,15 @@ def get_user_id(session_id: Optional[str] = None, x_user: Optional[str] = Header
 
 
 def verify_session(session_id: Optional[str]) -> Optional[str]:
+    """
+    Verify the session ID with the authentication service.
+
+    Args:
+        session_id (Optional[str]): Session ID retrieved from cookies.
+
+    Returns:
+        Optional[str]: User ID (email) if session is valid, None otherwise.
+    """
     if not session_id:
         return None
     try:
@@ -97,20 +124,52 @@ def verify_session(session_id: Optional[str]) -> Optional[str]:
 
 # * Endpoints
 @app.get("/orders", response_model=OrdersListResponse)
-def list_orders(user_id: str = Depends(get_user_id)):
-    return {'orders': list(ORDERS.get(user_id, {}).values())}
+def list_orders(user_id: str = Depends(get_user_id)) -> OrdersListResponse:
+    """
+    Retrieve all orders for the authenticated user.
+
+    Args:
+        user_id (str): User ID obtained from authentication dependency.
+
+    Returns:
+        OrdersListResponse: List of orders.
+    """
+    return OrdersListResponse(orders=[OrderResponse(**order) for order in ORDERS.get(user_id, {}).values()])
 
 
 @app.get("/orders/{order_id}", response_model=OrderResponse)
-def get_order(order_id: str, user_id: str = Depends(get_user_id)):
+def get_order(order_id: str, user_id: str = Depends(get_user_id)) -> OrderResponse:
+    """
+    Retrieve a specific order by order ID for the authenticated user.
+
+    Args:
+        order_id (str): ID of the order to retrieve.
+        user_id (str): User ID obtained from authentication dependency.
+
+    Raises:
+        HTTPException: If order not found.
+
+    Returns:
+        OrderResponse: Order details.
+    """
     order = ORDERS.get(user_id, {}).get(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    return order
+    return OrderResponse(**order)
 
 
 @app.post("/orders", status_code=201)
-def create_order(order: OrderCreate, user_id: str = Depends(get_user_id)):
+def create_order(order: OrderCreate, user_id: str = Depends(get_user_id)) -> dict:
+    """
+    Create a new order for the authenticated user.
+
+    Args:
+        order (OrderCreate): Order creation payload.
+        user_id (str): User ID obtained from authentication dependency.
+
+    Returns:
+        dict: Order creation confirmation with order ID.
+    """
     order_id = str(uuid.uuid4())
     new_order = {
         "order_id": order_id,
@@ -124,7 +183,21 @@ def create_order(order: OrderCreate, user_id: str = Depends(get_user_id)):
 
 
 @app.put("/orders/{order_id}", response_model=OrderResponse)
-def update_order(order_id: str, update: OrderUpdate, user_id: str = Depends(get_user_id)):
+def update_order(order_id: str, update: OrderUpdate, user_id: str = Depends(get_user_id)) -> OrderResponse:
+    """
+    Update an existing order for the authenticated user.
+
+    Args:
+        order_id (str): ID of the order to update.
+        update (OrderUpdate): Fields to update.
+        user_id (str): User ID obtained from authentication dependency.
+
+    Raises:
+        HTTPException: If order not found.
+
+    Returns:
+        OrderResponse: Updated order details.
+    """
     user_orders = ORDERS.get(user_id, {})
     order = user_orders.get(order_id)
     if not order:
@@ -136,11 +209,24 @@ def update_order(order_id: str, update: OrderUpdate, user_id: str = Depends(get_
             order[field] = val
 
     order["timestamp"] = int(time.time())
-    return order
+    return OrderResponse(**order)
 
 
 @app.delete("/orders/{order_id}", status_code=204)
-def delete_order(order_id: str, user_id: str = Depends(get_user_id)):
+def delete_order(order_id: str, user_id: str = Depends(get_user_id)) -> JSONResponse:
+    """
+    Delete an existing order for the authenticated user.
+
+    Args:
+        order_id (str): ID of the order to delete.
+        user_id (str): User ID obtained from authentication dependency.
+
+    Raises:
+        HTTPException: If order not found.
+
+    Returns:
+        JSONResponse: 204 No Content on successful deletion.
+    """
     user_orders = ORDERS.get(user_id, {})
     if order_id not in user_orders:
         raise HTTPException(status_code=404, detail="Order not found")
