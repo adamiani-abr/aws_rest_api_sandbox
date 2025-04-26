@@ -155,6 +155,10 @@ def my_orders() -> Union[str, Response]:
     resp = requests.get(f"{AWS_REST_API_URL}/orders", headers=__set_and_get_auth_headers(), timeout=3)
     if resp.status_code != 200:
         return f"Failed to fetch orders. Status code: {resp.status_code}"
+
+    print(f"resp.status_code: {resp.status_code}")
+    print(f"resp.json(): {resp.json()}")
+
     orders = resp.json().get("orders", [])
     return render_template("my_orders.html", orders=orders, current_year=date.today().year)
 

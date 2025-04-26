@@ -1,9 +1,8 @@
 import os
 from typing import Optional
 
+from aws_app_config.aws_app_config_client import AWSAppConfigClient
 from dotenv import load_dotenv
-
-from src_api_gateway.web_service.aws_app_config.aws_app_config_client import AWSAppConfigClient
 
 load_dotenv()
 

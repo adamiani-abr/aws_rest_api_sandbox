@@ -15,10 +15,10 @@ class AWSAppConfigClientSandboxAlex(AWSAppConfigClient):
     __AWS_APP_CONFIG_CONFIG_PROFILE_ID = os.getenv("AWS_APP_CONFIG_CONFIG_PROFILE_ID", "")
     __AWS_APP_CONFIG_CACHE_TTL = int(os.environ.get("AWS_APP_CONFIG_CACHE_TTL", "60"))
     __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE = os.environ.get(
-        "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE", ""
+        "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE",
     )
     __AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_ECS_LAMBDA_AUTHORIZER = os.environ.get(
-        "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_LAMBDA_AUTHORIZER", ""
+        "AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_LAMBDA_AUTHORIZER",
     )
 
     def __init__(self) -> None:
@@ -48,7 +48,7 @@ class AWSAppConfigClientSandboxAlex(AWSAppConfigClient):
             return config[key]
         return None
 
-    def get_config_api_gateway_authorizer_ecs_auth_service(self) -> Optional[str]:
+    def get_config_api_gateway_authorizer_ecs_auth_service(self) -> dict:
         """
         Retrieves the configuration from AWS AppConfig.
         :param config_name: Name of the configuration to retrieve.
@@ -58,7 +58,7 @@ class AWSAppConfigClientSandboxAlex(AWSAppConfigClient):
             AWSAppConfigClientSandboxAlex.__AWS_APP_CONFIG_FEATURE_FLAG_KEY_API_GATEWAY_AUTHORIZER_AUTH_SERVICE,
         )
 
-    def get_config_api_gateway_authorizer_lambda_authorizer(self) -> Optional[str]:
+    def get_config_api_gateway_authorizer_lambda_authorizer(self) -> dict:
         """
         Retrieves the configuration from AWS AppConfig.
         :param config_name: Name of the configuration to retrieve.

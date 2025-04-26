@@ -27,7 +27,8 @@ services:
 
   order_service:
     build:
-      context: ./src_api_gateway/order_service
+      # context: ./src_api_gateway/order_service
+      context: ./src_api_gateway/order_service_fastapi
       dockerfile: Dockerfile
     depends_on:
       - auth_service

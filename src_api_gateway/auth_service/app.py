@@ -109,7 +109,7 @@ def verify() -> Tuple[Response, int]:
     if username:
         decoded = username.decode("utf-8")
         # print(f"decoded username: {decoded}")
-        return jsonify({"message": "valid session", "user": decoded}), 200
+        return jsonify({"message": "valid session", "user": json.loads(decoded)}), 200
 
     return jsonify({"message": "invalid session"}), 401
 
