@@ -66,6 +66,8 @@ jobs:
         python -m uv pip install -r src_api_gateway/order_service/requirements.txt
         python -m uv pip install -r src_api_gateway/web_service/requirements.txt
 
+        python -m mypy --install-types
+
     - name: Lint with flake8
       id: flake8
       continue-on-error: true  # will check failure after
