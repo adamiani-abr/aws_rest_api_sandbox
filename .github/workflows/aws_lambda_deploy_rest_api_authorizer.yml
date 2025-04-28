@@ -1,0 +1,64 @@
+# ************************************************************************** #
+# Deploys Docker image to AWS ECR and then updates AWS Lambda with the image.
+#
+# Uses whoan/docker-build-with-cache-action to cache the Docker image to
+# speed up build times. Does so by creating a second AWS ECR repo with
+# [-stage] at the end to pull cached images from.
+#
+# Must define the env vars at the top of the file with your specific ones.
+#
+# Must specify the following GitHub secrets:
+#   * AWS_ACCESS_KEY_ID
+#   * AWS_SECRET_ACCESS_KEY
+#   * AWS_ECR_IMAGE_URI
+# ************************************************************************** #
+
+name: AWS Lambda Deploy
+
+on:
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:  # trigger manually
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      ECR_IMAGE_TAG: latest
+#       ECR_IMAGE_TAG: ${{ github.sha }}
+      AWS_ECR_REPOSITORY_NAME: sandbox/flask-microservices/rest-api-lambda-authorizer
+      AWS_LAMBDA_FUNC_NAME: sandbox-alex-rest-api-authorizer-lambda
+      AWS_DEFAULT_REGION: us-east-1
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@main
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@main
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@main
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ env.AWS_ECR_REPOSITORY_NAME }}:${{ env.ECR_IMAGE_TAG }}
+        cache-from: type=registry,ref=${{ env.AWS_ECR_REPOSITORY_NAME }}:cache
+        cache-to: type=inline
+
+    - name: Deploy to AWS Lambda
+      run: |
+        aws lambda update-function-code \
+        --function-name ${{ env.AWS_LAMBDA_FUNC_NAME }} \
+        --image-uri "${{ secrets.AWS_ECR_IMAGE_URI_LAMBDA_AUTHORIZER }}:${{ env.ECR_IMAGE_TAG }}"
+      env:
+        AWS_LAMBDA_FUNC_NAME: ${{ env.AWS_LAMBDA_FUNC_NAME }}
