@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 # Install redis-tools, telnet, iputils-ping, and dnsutils (for nslookup)
 RUN apt-get update && \

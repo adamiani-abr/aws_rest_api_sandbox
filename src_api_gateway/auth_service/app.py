@@ -34,7 +34,7 @@ except Exception as e:
 
 # * simulated user database
 users: Dict[str, Dict[str, str]] = {
-    "admin": {"password": "password123"},
+    "programmingwithalex3@gmail.com": {"password": "password123"},
     "test_user": {"password": "passwordtest"},
 }
 

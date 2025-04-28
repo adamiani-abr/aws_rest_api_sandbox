@@ -1,13 +1,16 @@
+import json
+import logging
 import os
 import time
 import uuid
 from typing import Any, Dict, List, Optional
 
+import boto3
 import requests
 import uvicorn
 from aws_app_config.aws_app_config_client_sandbox_alex import AWSAppConfigClientSandboxAlex
 from dotenv import load_dotenv
-from fastapi import Cookie, Depends, FastAPI, Header, HTTPException, Request, status
+from fastapi import BackgroundTasks, Cookie, Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -20,7 +23,7 @@ AUTH_SERVICE_URL = os.environ["AUTH_SERVICE_URL_REST_API"]
 
 # In-memory store: user_id -> {order_id -> order_data}
 ORDERS: Dict[str, Dict[str, Dict[str, Any]]] = {
-    "admin": {
+    "programmingwithalex3@gmail.com": {
         "order-001": {
             "order_id": "order-001",
             "items": ["apple", "banana"],
@@ -159,12 +162,17 @@ def get_order(order_id: str, user_id: str = Depends(get_user_id)) -> OrderRespon
 
 
 @app.post("/orders", status_code=201)
-def create_order(order: OrderCreate, user_id: str = Depends(get_user_id)) -> dict:
+def create_order(
+    order: OrderCreate,
+    background_tasks: BackgroundTasks,
+    user_id: str = Depends(get_user_id),
+) -> dict:
     """
     Create a new order for the authenticated user.
 
     Args:
         order (OrderCreate): Order creation payload.
+        background_tasks (BackgroundTasks): FastAPI background task handler.
         user_id (str): User ID obtained from authentication dependency.
 
     Returns:
@@ -179,6 +187,10 @@ def create_order(order: OrderCreate, user_id: str = Depends(get_user_id)) -> dic
         "timestamp": int(time.time()),
     }
     ORDERS.setdefault(user_id, {})[order_id] = new_order
+
+    # * schedule publishing to sns in the background
+    background_tasks.add_task(publish_order_created_event_to_aws_sns, user_id, new_order)
+
     return {"order_id": order_id, "message": "Order created"}
 
 
@@ -232,6 +244,25 @@ def delete_order(order_id: str, user_id: str = Depends(get_user_id)) -> JSONResp
         raise HTTPException(status_code=404, detail="Order not found")
     del user_orders[order_id]
     return JSONResponse(status_code=204, content=None)
+
+
+def publish_order_created_event_to_aws_sns(user_id: str, order: dict) -> None:
+    try:
+        sns_client = boto3.client('sns', region_name=os.environ["AWS_DEFAULT_REGION"])
+        topic_arn = os.environ["AWS_ORDER_CREATED_SNS_TOPIC_ARN"]
+
+        message_payload = {
+            "user_email": user_id,
+            "order_id": order["order_id"],
+            "total": order["total"],
+            "timestamp": order["timestamp"],
+            "items": order["items"],
+        }
+
+        sns_client.publish(TopicArn=topic_arn, Message=json.dumps(message_payload), Subject="OrderCreated")
+    except Exception as e:
+        logging.error(f'os.environ["AWS_ORDER_CREATED_SNS_TOPIC_ARN"]: {os.environ["AWS_ORDER_CREATED_SNS_TOPIC_ARN"]}')
+        logging.exception("Failed to publish order created event to SNS", e)
 
 
 if __name__ == "__main__":

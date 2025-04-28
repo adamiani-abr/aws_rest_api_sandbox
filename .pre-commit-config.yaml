@@ -52,3 +52,10 @@ repos:
         name: isort
         entry: isort
         language: system
+  - repo: local
+    hooks:
+      - id: bandit
+        name: bandit
+        entry: bandit -r . -c pyproject.toml
+        language: system
+        pass_filenames: false
