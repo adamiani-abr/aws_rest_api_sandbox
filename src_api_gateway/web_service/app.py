@@ -1,7 +1,7 @@
 import os
 from datetime import date
 from functools import wraps
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable
 
 import requests
 from aws_app_config.aws_app_config_client_sandbox_alex import AWSAppConfigClientSandboxAlex  # pylint: disable=import-error
@@ -45,16 +45,19 @@ def login_required(f: Callable) -> Callable:
         session_id = request.cookies.get("session_id")
         if not session_id:
             return make_response(redirect(url_for("login")))
-        response = requests.post(f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id}, timeout=3)
-        if response.status_code != 200:
-            return make_response(redirect(url_for("login")))
+        try:
+            response = requests.post(f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id}, timeout=3)
+            if response.status_code != 200:
+                return make_response(redirect(url_for("login")))
+        except requests.exceptions.Timeout:
+            return "Server timeout. Please try again.", 504
         return f(*args, **kwargs)
 
     return decorated_function
 
 
 @app.route("/google-logged-in")
-def google_logged_in() -> Union[Response, Tuple[str, int]]:
+def google_logged_in() -> Response | str | tuple[str, int]:
     """Handle login callback from Google and create a session via the auth service."""
     if not google.authorized:
         return make_response(redirect(url_for("google.login")))
@@ -62,21 +65,25 @@ def google_logged_in() -> Union[Response, Tuple[str, int]]:
     if not resp.ok:
         return f"Failed to fetch user info: {resp.text}", 500
     user_info = resp.json()
-    auth_response = requests.post(
-        f"{AUTH_SERVICE_URL}/store_google_user_info",
-        json={"email": user_info.get("email"), "name": user_info.get("name")},
-        timeout=3,
-    )
-    if auth_response.status_code != 200:
-        return f"Failed to create session: {auth_response.text}", 500
-    session_id = auth_response.json()["session_id"]
-    response = make_response(render_template("google_logged_in.html", user=user_info, current_year=date.today().year))
-    response.set_cookie("session_id", session_id, httponly=True, secure=False, domain=request.host, path="/", max_age=3600)
-    return response
+
+    try:
+        auth_response = requests.post(
+            f"{AUTH_SERVICE_URL}/store_google_user_info",
+            json={"email": user_info.get("email"), "name": user_info.get("name")},
+            timeout=3,
+        )
+        if auth_response.status_code != 200:
+            return f"Failed to create session: {auth_response.text}", 500
+        session_id = auth_response.json()["session_id"]
+        response = make_response(render_template("google_logged_in.html", user=user_info, current_year=date.today().year))
+        response.set_cookie("session_id", session_id, httponly=True, secure=False, domain=request.host, path="/", max_age=3600)
+        return response
+    except requests.exceptions.Timeout:
+        return "Server timeout. Please try again.", 504
 
 
 @app.route("/")
-def index() -> str:
+def index() -> Response | str | tuple[str, int]:
     """Landing page that checks for a valid session and shows user info if logged in."""
     session_id = request.cookies.get("session_id")
     if session_id:
@@ -85,15 +92,17 @@ def index() -> str:
             if response.status_code == 200:
                 user = response.json().get("user")
                 return render_template("index.html", user=user, current_year=date.today().year)
+        except requests.exceptions.Timeout:
+            return "Server timeout. Please try again.", 504
         except requests.RequestException:
             pass
     return render_template("index.html", user=None, current_year=date.today().year)
 
 
 @app.route("/login", methods=["GET", "POST"])
-def login() -> Response:
+def login() -> Response | str | tuple[str, int]:
     """Login form that authenticates user via the auth service and sets a session cookie."""
-    error: Optional[str] = None
+    error: str | None = None
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -110,12 +119,14 @@ def login() -> Response:
                 error = "Session ID missing from response."
             else:
                 error = "Invalid credentials."
+        except requests.exceptions.Timeout:
+            return "Server timeout. Please try again.", 504
         except requests.RequestException:
             error = "Auth service unavailable."
     return render_template("login.html", error=error, current_year=date.today().year)  # type: ignore
 
 
-def __set_and_get_auth_headers() -> Dict[str, str]:
+def __set_and_get_auth_headers() -> dict[str, str]:
     """Return headers needed for order service requests based on session type."""
     session_id = request.cookies.get("session_id")
     if aws_app_config_client.get_config_api_gateway_authorizer_ecs_auth_service():
@@ -150,11 +161,15 @@ def settings() -> str:
 
 @app.route("/my-orders")
 @login_required
-def my_orders() -> Union[str, Response]:
+def my_orders() -> Response | str | tuple[str, int]:
     """Retrieve and display the user's orders."""
-    resp = requests.get(f"{AWS_REST_API_URL}/orders", headers=__set_and_get_auth_headers(), timeout=3)
+    try:
+        resp = requests.get(f"{AWS_REST_API_URL}/orders", headers=__set_and_get_auth_headers(), timeout=3)
+    except requests.exceptions.Timeout:
+        return "Server timeout. Please try again.", 504
+
     if resp.status_code != 200:
-        return f"Failed to fetch orders. Status code: {resp.status_code}"
+        return f"Failed to fetch orders. Status code: {resp.status_code}", resp.status_code
 
     print(f"resp.status_code: {resp.status_code}")
     print(f"resp.json(): {resp.json()}")
@@ -165,18 +180,22 @@ def my_orders() -> Union[str, Response]:
 
 @app.route("/my-orders/<order_id>")
 @login_required
-def get_order_detail(order_id: str) -> str:
+def get_order_detail(order_id: str) -> Response | str | tuple[str, int]:
     """Get details of a specific order."""
-    resp = requests.get(f"{AWS_REST_API_URL}/orders/{order_id}", headers=__set_and_get_auth_headers(), timeout=3)
+    try:
+        resp = requests.get(f"{AWS_REST_API_URL}/orders/{order_id}", headers=__set_and_get_auth_headers(), timeout=3)
+    except requests.exceptions.Timeout:
+        return "Server timeout. Please try again.", 504
+
     if resp.status_code == 404:
-        return f"Order {order_id} not found."
+        return f"Order {order_id} not found.", 404
     order = resp.json()
     return render_template("order_detail.html", order=order, current_year=date.today().year)
 
 
 @app.route("/place-order", methods=["GET", "POST"])
 @login_required
-def place_order() -> Union[str, Response]:
+def place_order() -> Response | str | tuple[str, int] | tuple[Response, int]:
     """Form to place a new order."""
     if request.method == "POST":
         items = request.form.get("items", "")
@@ -185,8 +204,10 @@ def place_order() -> Union[str, Response]:
         try:
             response = requests.post(f"{AWS_REST_API_URL}/orders", json=data, headers=__set_and_get_auth_headers(), timeout=3)
             if response.status_code == 201:
-                return make_response(redirect(url_for("my_orders")))
-            return f"Failed to create order. Status code: {response.status_code}"
+                return make_response(redirect(url_for("my_orders"))), 201
+            return f"Failed to create order. Status code: {response.status_code}", response.status_code
+        except requests.exceptions.Timeout:
+            return "Server timeout. Please try again.", 504
         except Exception as e:
             return f"Error: {str(e)}"
     return render_template("place_order.html", current_year=date.today().year)
@@ -194,11 +215,11 @@ def place_order() -> Union[str, Response]:
 
 @app.route("/my-orders/<order_id>/edit", methods=["GET", "POST"])
 @login_required
-def edit_order(order_id: str) -> Union[str, Response]:
+def edit_order(order_id: str) -> Response | str | tuple[str, int] | tuple[Response, int]:
     """Edit an existing order."""
     api_url = f"{AWS_REST_API_URL}/orders/{order_id}"
     headers = __set_and_get_auth_headers()
-    errors: Dict[str, str] = {}
+    errors: dict[str, str] = {}
     order = {}
 
     if request.method == "POST":
@@ -222,34 +243,44 @@ def edit_order(order_id: str) -> Union[str, Response]:
 
         if not errors:
             payload = {"items": items, "total": total, "status": status}
-            resp = requests.put(api_url, json=payload, headers=headers, timeout=3)
-            if resp.status_code == 200:
-                return make_response(redirect(url_for("get_order_detail", order_id=order_id)))
-            errors["form"] = f"Update failed (status {resp.status_code})."
+            try:
+                resp = requests.put(api_url, json=payload, headers=headers, timeout=3)
+                if resp.status_code == 200:
+                    return make_response(redirect(url_for("get_order_detail", order_id=order_id))), 200
+                errors["form"] = f"Update failed (status {resp.status_code})."
+            except requests.exceptions.Timeout:
+                return "Server timeout. Please try again.", 504
     else:
-        resp = requests.get(api_url, headers=headers, timeout=3)
+        try:
+            resp = requests.get(api_url, headers=headers, timeout=3)
+        except requests.exceptions.Timeout:
+            return "Server timeout. Please try again.", 504
+
         if resp.status_code != 200:
-            return f"Failed to load order (status {resp.status_code})."
+            return f"Failed to load order (status {resp.status_code}).", resp.status_code
         order = resp.json()
 
     return render_template("edit_order.html", order=order, errors=errors, current_year=date.today().year)
 
 
 @app.route("/logout")
-def logout() -> Response:
+def logout() -> Response | str | tuple[str, int]:
     """Logout the user by clearing session and redirecting through Google logout."""
     session_id = request.cookies.get("session_id")
     if session_id:
-        requests.post(f"{AUTH_SERVICE_URL}/logout", json={"session_id": session_id}, timeout=3)
-        google.token = None
-        session.clear()
-        logout_url = (
-            "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?"
-            f"continue={url_for('index', _external=True)}"
-        )
-        resp = make_response(redirect(logout_url))
-        resp.delete_cookie("session_id", domain=request.host, path="/")
-        return resp
+        try:
+            requests.post(f"{AUTH_SERVICE_URL}/logout", json={"session_id": session_id}, timeout=3)
+            google.token = None
+            session.clear()
+            logout_url = (
+                "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?"
+                f"continue={url_for('index', _external=True)}"
+            )
+            resp = make_response(redirect(logout_url))
+            resp.delete_cookie("session_id", domain=request.host, path="/")
+            return resp
+        except requests.exceptions.Timeout:
+            return "Server timeout. Please try again.", 504
     return make_response(redirect(url_for("index")))
 
 
