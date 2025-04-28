@@ -13,7 +13,7 @@
 #   * AWS_ECR_IMAGE_URI
 # ************************************************************************** #
 
-name: AWS Lambda Deploy - AWS REST API Authorizer
+name: AWS Lambda Deploy - SNS Email Notification Order Created
 
 on:
   pull_request:
@@ -23,8 +23,8 @@ on:
 env:
   ECR_IMAGE_TAG: latest
   # ECR_IMAGE_TAG: ${{ github.sha }}
-  AWS_ECR_REPOSITORY_NAME: sandbox/flask-microservices/rest-api-lambda-authorizer
-  AWS_LAMBDA_FUNC_NAME: sandbox-alex-rest-api-authorizer-lambda
+  AWS_ECR_REPOSITORY_NAME: sandbox/flask-microservices/sns-email-notification-order-sent
+  AWS_LAMBDA_FUNC_NAME: sandbox-alex-rest-api-order-created-email-sns-lambda
   AWS_DEFAULT_REGION: us-east-1
   WORKING_DIRECTORY: ./src_api_gateway/lambda_email_notification
 
