@@ -56,9 +56,9 @@ def mock_valid_session(requests_mock: Mocker) -> None:
 def test_my_orders_success(
     client: FlaskClient,
     requests_mock: Mocker,
-    force_ecs_auth: None,
-    simulate_session_cookie: None,
-    mock_valid_session: None,
+    force_ecs_auth: None,  # pylint: disable=unused-argument
+    simulate_session_cookie: None,  # pylint: disable=unused-argument
+    mock_valid_session: None,  # pylint: disable=unused-argument
 ) -> None:
     """
     test /my-orders route when user is authenticated and orders are available
@@ -77,9 +77,9 @@ def test_my_orders_success(
 def test_place_order_success(
     client: FlaskClient,
     requests_mock: Mocker,
-    force_ecs_auth: None,
-    simulate_session_cookie: None,
-    mock_valid_session: None,
+    force_ecs_auth: None,  # pylint: disable=unused-argument
+    simulate_session_cookie: None,  # pylint: disable=unused-argument
+    mock_valid_session: None,  # pylint: disable=unused-argument
 ) -> None:
     """
     test /place-order with valid form input and auth/session in place
@@ -103,9 +103,9 @@ def test_place_order_success(
 def test_edit_order_success(
     client: FlaskClient,
     requests_mock: Mocker,
-    force_ecs_auth: None,
-    simulate_session_cookie: None,
-    mock_valid_session: None,
+    force_ecs_auth: None,  # pylint: disable=unused-argument
+    simulate_session_cookie: None,  # pylint: disable=unused-argument
+    mock_valid_session: None,  # pylint: disable=unused-argument
 ) -> None:
     """
     test /my-orders/<order_id>/edit for a successful order update
