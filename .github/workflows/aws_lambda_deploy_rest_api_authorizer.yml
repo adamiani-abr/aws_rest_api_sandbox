@@ -49,7 +49,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: .
+        context: ./src_api_gateway/lambda_email_notification
         push: true
         tags: ${{ env.AWS_ECR_REPOSITORY_NAME }}:${{ env.ECR_IMAGE_TAG }}
         cache-from: type=registry,ref=${{ env.AWS_ECR_REPOSITORY_NAME }}:cache
