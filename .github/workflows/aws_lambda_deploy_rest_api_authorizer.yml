@@ -20,16 +20,18 @@ on:
     branches: [ master, main ]
   workflow_dispatch:  # trigger manually
 
+env:
+  ECR_IMAGE_TAG: latest
+  # ECR_IMAGE_TAG: ${{ github.sha }}
+  AWS_ECR_REPOSITORY_NAME: sandbox/flask-microservices/rest-api-lambda-authorizer
+  AWS_LAMBDA_FUNC_NAME: sandbox-alex-rest-api-authorizer-lambda
+  AWS_DEFAULT_REGION: us-east-1
+  WORKING_DIRECTORY: ./src_api_gateway/lambda_email_notification
+
 jobs:
   build:
 
     runs-on: ubuntu-latest
-    env:
-      ECR_IMAGE_TAG: latest
-#       ECR_IMAGE_TAG: ${{ github.sha }}
-      AWS_ECR_REPOSITORY_NAME: sandbox/flask-microservices/rest-api-lambda-authorizer
-      AWS_LAMBDA_FUNC_NAME: sandbox-alex-rest-api-authorizer-lambda
-      AWS_DEFAULT_REGION: us-east-1
 
     steps:
     - name: checkout
@@ -46,14 +48,19 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@main
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./src_api_gateway/lambda_email_notification
-        push: true
-        tags: ${{ env.AWS_ECR_REPOSITORY_NAME }}:${{ env.ECR_IMAGE_TAG }}
-        cache-from: type=registry,ref=${{ env.AWS_ECR_REPOSITORY_NAME }}:cache
-        cache-to: type=inline
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build a docker container and
+        # push it to ECR so that it can
+        # be deployed to ECS.
+        docker build -t $ECR_REGISTRY/$AWS_ECR_REPOSITORY_NAME:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$AWS_ECR_REPOSITORY_NAME:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$AWS_ECR_REPOSITORY_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
     - name: Deploy to AWS Lambda
       run: |
