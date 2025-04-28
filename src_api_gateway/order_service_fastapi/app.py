@@ -3,7 +3,6 @@ import logging
 import os
 import time
 import uuid
-from typing import Any, Dict, List, Optional
 
 import boto3
 import requests
@@ -15,14 +14,14 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # * Load environment variables
-load_dotenv(dotenv_path="src_api_gateway/.env")
+load_dotenv()
 
 app = FastAPI()
 aws_app_config_client = AWSAppConfigClientSandboxAlex()
 AUTH_SERVICE_URL = os.environ["AUTH_SERVICE_URL_REST_API"]
 
-# In-memory store: user_id -> {order_id -> order_data}
-ORDERS: Dict[str, Dict[str, Dict[str, Any]]] = {
+# * In-memory store: user_id -> {order_id -> order_data}
+ORDERS: dict[str, dict[str, dict[str, any]]] = {  # type: ignore
     "programmingwithalex3@gmail.com": {
         "order-001": {
             "order_id": "order-001",
@@ -44,33 +43,44 @@ ORDERS: Dict[str, Dict[str, Dict[str, Any]]] = {
 
 # * Pydantic models
 class OrderCreate(BaseModel):
-    items: List[str]
+    items: list[str]
     total: float
 
 
 class OrderUpdate(BaseModel):
-    items: Optional[List[str]] = None
-    total: Optional[float] = None
-    status: Optional[str] = None
+    items: list[str] | None = None
+    total: float | None = None
+    status: str | None = None
 
 
 class OrderResponse(BaseModel):
     order_id: str
-    items: List[str]
+    items: list[str]
     status: str
     total: float
     timestamp: int
 
 
 class OrdersListResponse(BaseModel):
-    orders: List[OrderResponse]
+    orders: list[OrderResponse]
+
+
+@app.get("/")
+def index() -> JSONResponse:
+    """
+    Health check endpoint.
+
+    Returns:
+        JSONResponse: Health status.
+    """
+    return JSONResponse(status_code=200, content={"status": "ok"})
 
 
 # * Session verification dependency
-def get_user_id(
+async def get_user_id(
     request: Request,
-    session_id: Optional[str] = Cookie(default=None),
-    x_user: Optional[str] = Header(default=None),
+    session_id: str | None = Cookie(default=None),
+    x_user: str | None = Header(default=None),
 ) -> str:
     """
     Dependency to retrieve and verify the authenticated user's ID.
@@ -90,19 +100,19 @@ def get_user_id(
 
     if aws_app_config_client.get_config_api_gateway_authorizer_ecs_auth_service():
         session_id = request.cookies.get("session_id")
-        user_id = verify_session(session_id)
+        user_id = await verify_session(session_id)
     elif aws_app_config_client.get_config_api_gateway_authorizer_lambda_authorizer():
         user_id = x_user
     else:
         session_id = request.cookies.get("session_id")
-        user_id = verify_session(session_id)
+        user_id = await verify_session(session_id)
 
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
     return user_id
 
 
-def verify_session(session_id: Optional[str]) -> Optional[str]:
+async def verify_session(session_id: str | None) -> str | None:
     """
     Verify the session ID with the authentication service.
 

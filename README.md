@@ -1,5 +1,27 @@
 # aws_elasticache_redis
 
+## Technologies
+
+* `redis`
+* `Docker`
+* `AWS`
+  * `ECR`
+  * `ECS` (`Fargate`)
+  * `ElastiCache`
+  * `API Gateway` (REST)
+  * `Lambda`
+  * `SNS`
+  * `AppConfig`
+* `python`
+* `FastAPI`
+* `pydantic`
+* `flask`
+* `Oauth2.0`
+* `GitHub Actions`
+  * CI/CD pipelines
+    * CI pipeline - testing and linting - uses [GitHub Service Containers](https://docs.github.com/en/actions/use-cases-and-examples/using-containerized-services/about-service-containers) (for `redis`)
+    * CD pipeline to deploy updates to `ECS Fargate Services` and `Lambda` from `ECR`
+
 ## Web Front-End
 
 * deployed via AWS ECS Service (API Gateway routes also point to separate ECS Services)

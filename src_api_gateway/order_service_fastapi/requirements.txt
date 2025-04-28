@@ -2,6 +2,6 @@ flask
 requests
 boto3
 python-dotenv
-fastapi
+fastapi[standard]
 pydantic
 uvicorn
