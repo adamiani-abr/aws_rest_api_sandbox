@@ -3,15 +3,17 @@ import logging
 import os
 import time
 import uuid
+from enum import Enum
+from typing import Annotated, Literal
 
 import boto3
 import requests
 import uvicorn
 from aws_app_config.aws_app_config_client_sandbox_alex import AWSAppConfigClientSandboxAlex
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, Cookie, Depends, FastAPI, Header, HTTPException, Request, status
+from fastapi import BackgroundTasks, Body, Cookie, Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 
 # * Load environment variables
 load_dotenv()
@@ -39,41 +41,6 @@ ORDERS: dict[str, dict[str, dict[str, any]]] = {  # type: ignore
         },
     }
 }
-
-
-# * Pydantic models
-class OrderCreate(BaseModel):
-    items: list[str]
-    total: float
-
-
-class OrderUpdate(BaseModel):
-    items: list[str] | None = None
-    total: float | None = None
-    status: str | None = None
-
-
-class OrderResponse(BaseModel):
-    order_id: str
-    items: list[str]
-    status: str
-    total: float
-    timestamp: int
-
-
-class OrdersListResponse(BaseModel):
-    orders: list[OrderResponse]
-
-
-@app.get("/")
-def index() -> JSONResponse:
-    """
-    Health check endpoint.
-
-    Returns:
-        JSONResponse: Health status.
-    """
-    return JSONResponse(status_code=200, content={"status": "ok"})
 
 
 # * Session verification dependency
@@ -135,9 +102,87 @@ async def verify_session(session_id: str | None) -> str | None:
     return None
 
 
+UserId = Annotated[str, Depends(get_user_id)]
+
+
+class OrderStatus(str, Enum):
+    created = "created"
+    shipped = "shipped"
+    cancelled = "cancelled"
+
+
+# * Pydantic models
+class FilterParamsOrders(BaseModel):
+    limit: int = Field(100, gt=0, le=100)
+    offset: int = Field(0, ge=0)
+    order_by: Literal["created_at", "updated_at"] = "created_at"
+    tags: list[str] = []
+
+
+class User(BaseModel):
+    '''TODO: remove this model when using real auth service'''
+
+    email: EmailStr
+
+
+class OrderCreate(BaseModel):
+    model_config = {"extra": "forbid"}  # forbid extra fields not defined in the model when creating an order
+
+    items: Annotated[
+        list[str],  # todo: change to list[Item] when using Item model
+        Body(
+            examples=[
+                ["apple", "banana", "orange"],
+                ["notebook", "pen"],
+            ],
+        ),
+    ] = Field(
+        description="items purchased - list of item names - will be replaced with Item model",
+        min_items=1,  # type: ignore
+        max_items=10,  # type: ignore
+    )
+    total: float = Field(description="total amount of the order", gt=0, examples=[35.4])
+
+
+class OrderUpdate(BaseModel):
+    items: list[str] | None = None
+    total: float | None = None
+    status: OrderStatus | None = None
+
+
+class OrderResponse(BaseModel):
+    order_id: str
+    items: list[str]
+    status: str
+    total: float
+    timestamp: int
+
+
+class OrdersListResponse(BaseModel):
+    orders: list[OrderResponse]
+
+
+def check_valid_status(status: str) -> str:
+    allowed = [status.value for status in OrderStatus]
+    if status not in allowed:
+        raise ValueError(f"Status must be one of: {', '.join(allowed)}")
+    return status
+
+
+@app.get("/")
+def index() -> JSONResponse:
+    """
+    Health check endpoint.
+
+    Returns:
+        JSONResponse: Health status.
+    """
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"status": "ok"})
+
+
 # * Endpoints
 @app.get("/orders", response_model=OrdersListResponse)
-def list_orders(user_id: str = Depends(get_user_id)) -> OrdersListResponse:
+def list_orders(user_id: UserId) -> OrdersListResponse:
     """
     Retrieve all orders for the authenticated user.
 
@@ -150,8 +195,8 @@ def list_orders(user_id: str = Depends(get_user_id)) -> OrdersListResponse:
     return OrdersListResponse(orders=[OrderResponse(**order) for order in ORDERS.get(user_id, {}).values()])
 
 
-@app.get("/orders/{order_id}", response_model=OrderResponse)
-def get_order(order_id: str, user_id: str = Depends(get_user_id)) -> OrderResponse:
+@app.get("/orders/{order_id}", response_model=OrderResponse, response_model_exclude={"timestamp"})
+def get_order(order_id: str, user_id: UserId) -> OrderResponse:
     """
     Retrieve a specific order by order ID for the authenticated user.
 
@@ -167,15 +212,41 @@ def get_order(order_id: str, user_id: str = Depends(get_user_id)) -> OrderRespon
     """
     order = ORDERS.get(user_id, {}).get(order_id)
     if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
     return OrderResponse(**order)
 
 
-@app.post("/orders", status_code=201)
+@app.get("/orders/{order_id}/status", response_model=OrderResponse, deprecated=True)
+def get_order_status(order_id: str, user_id: UserId) -> OrderResponse:
+    """
+    Retrieve a specific order by order ID for the authenticated user.
+
+    Args:
+        order_id (str): ID of the order to retrieve.
+        user_id (str): User ID obtained from authentication dependency.
+
+    Raises:
+        HTTPException: If order not found.
+
+    Returns:
+        OrderResponse: Order details.
+    """
+    order = ORDERS.get(user_id, {}).get(order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+    order_status = order.get("status")
+    if not order_status or order_status not in OrderStatus._value2member_map_:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid order status")
+
+    return OrderStatus(order_status)
+
+
+@app.post("/orders", status_code=status.HTTP_201_CREATED)
 def create_order(
     order: OrderCreate,
     background_tasks: BackgroundTasks,
-    user_id: str = Depends(get_user_id),
+    user_id: UserId,
 ) -> dict:
     """
     Create a new order for the authenticated user.
@@ -205,7 +276,7 @@ def create_order(
 
 
 @app.put("/orders/{order_id}", response_model=OrderResponse)
-def update_order(order_id: str, update: OrderUpdate, user_id: str = Depends(get_user_id)) -> OrderResponse:
+def update_order(order_id: str, update: OrderUpdate, user_id: UserId) -> OrderResponse:
     """
     Update an existing order for the authenticated user.
 
@@ -223,7 +294,7 @@ def update_order(order_id: str, update: OrderUpdate, user_id: str = Depends(get_
     user_orders = ORDERS.get(user_id, {})
     order = user_orders.get(order_id)
     if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
     for field in {"items", "status", "total"}:
         val = getattr(update, field)
@@ -234,10 +305,10 @@ def update_order(order_id: str, update: OrderUpdate, user_id: str = Depends(get_
     return OrderResponse(**order)
 
 
-@app.delete("/orders/{order_id}", status_code=204)
-def delete_order(order_id: str, user_id: str = Depends(get_user_id)) -> JSONResponse:
+@app.delete("/orders/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_order(order_id: str, user_id: UserId) -> JSONResponse:
     """
-    Delete an existing order for the authenticated user.
+    Delete an existing order for the **authenticated** user.
 
     Args:
         order_id (str): ID of the order to delete.
@@ -251,9 +322,9 @@ def delete_order(order_id: str, user_id: str = Depends(get_user_id)) -> JSONResp
     """
     user_orders = ORDERS.get(user_id, {})
     if order_id not in user_orders:
-        raise HTTPException(status_code=404, detail="Order not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
     del user_orders[order_id]
-    return JSONResponse(status_code=204, content=None)
+    return JSONResponse(status_code=status.HTTP_204_NO_CONTENT, content=None)
 
 
 def publish_order_created_event_to_aws_sns(user_id: str, order: dict) -> None:

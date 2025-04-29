@@ -5,3 +5,5 @@ python-dotenv
 fastapi[standard]
 pydantic
 uvicorn
+email-validator  # for pydantic EmailStr
+python-multipart  # for fastapi file upload
