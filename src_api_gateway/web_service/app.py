@@ -8,6 +8,7 @@ from aws_app_config.aws_app_config_client_sandbox_alex import AWSAppConfigClient
 from dotenv import load_dotenv
 from flask import Flask, Response, make_response, redirect, render_template, request, session, url_for
 from flask_dance.contrib.google import google, make_google_blueprint
+from werkzeug.wrappers import Response as WerkzeugResponse
 
 load_dotenv()
 
@@ -44,11 +45,11 @@ def login_required(f: Callable) -> Callable:
         """decorated function to check session ID."""
         session_id = request.cookies.get("session_id")
         if not session_id:
-            return make_response(redirect(url_for("login")))
+            return redirect(url_for("login"))
         try:
             response = requests.post(f"{AUTH_SERVICE_URL}/verify", json={"session_id": session_id}, timeout=3)
             if response.status_code != 200:
-                return make_response(redirect(url_for("login")))
+                return redirect(url_for("login"))
         except requests.exceptions.Timeout:
             return "Server timeout. Please try again.", 504
         return f(*args, **kwargs)
@@ -57,10 +58,10 @@ def login_required(f: Callable) -> Callable:
 
 
 @app.route("/google-logged-in")
-def google_logged_in() -> Response | str | tuple[str, int]:
+def google_logged_in() -> Response | WerkzeugResponse | str | tuple[str, int]:
     """Handle login callback from Google and create a session via the auth service."""
     if not google.authorized:
-        return make_response(redirect(url_for("google.login")))
+        return redirect(url_for("google.login"))
     resp = google.get("/oauth2/v2/userinfo")
     if not resp.ok:
         return f"Failed to fetch user info: {resp.text}", 500
@@ -100,7 +101,7 @@ def index() -> Response | str | tuple[str, int]:
 
 
 @app.route("/login", methods=["GET", "POST"])
-def login() -> Response | str | tuple[str, int]:
+def login() -> Response | WerkzeugResponse | str | tuple[str, int]:
     """Login form that authenticates user via the auth service and sets a session cookie."""
     error: str | None = None
     if request.method == "POST":
@@ -111,7 +112,7 @@ def login() -> Response | str | tuple[str, int]:
             if response.status_code == 200:
                 session_id = response.json().get("session_id")
                 if session_id:
-                    resp = make_response(redirect(url_for("dashboard")))
+                    resp = redirect(url_for("dashboard"))
                     resp.set_cookie(
                         "session_id", session_id, httponly=True, secure=False, domain=request.host, path="/", max_age=3600
                     )
@@ -190,12 +191,13 @@ def get_order_detail(order_id: str) -> Response | str | tuple[str, int]:
     if resp.status_code == 404:
         return f"Order {order_id} not found.", 404
     order = resp.json()
+    print(f"resp.json(): {resp.json()}")
     return render_template("order_detail.html", order=order, current_year=date.today().year)
 
 
 @app.route("/place-order", methods=["GET", "POST"])
 @login_required
-def place_order() -> Response | str | tuple[str, int] | tuple[Response, int]:
+def place_order() -> Response | WerkzeugResponse | str | tuple[str, int] | tuple[Response, int]:
     """Form to place a new order."""
     if request.method == "POST":
         items = request.form.get("items", "")
@@ -204,7 +206,7 @@ def place_order() -> Response | str | tuple[str, int] | tuple[Response, int]:
         try:
             response = requests.post(f"{AWS_REST_API_URL}/orders", json=data, headers=__set_and_get_auth_headers(), timeout=3)
             if response.status_code == 201:
-                return make_response(redirect(url_for("my_orders"))), 201
+                return redirect(url_for("my_orders"), code=201)
             return f"Failed to create order. Status code: {response.status_code}", response.status_code
         except requests.exceptions.Timeout:
             return "Server timeout. Please try again.", 504
@@ -215,7 +217,7 @@ def place_order() -> Response | str | tuple[str, int] | tuple[Response, int]:
 
 @app.route("/my-orders/<order_id>/edit", methods=["GET", "POST"])
 @login_required
-def edit_order(order_id: str) -> Response | str | tuple[str, int] | tuple[Response, int]:
+def edit_order(order_id: str) -> Response | WerkzeugResponse | str | tuple[str, int] | tuple[Response, int]:
     """Edit an existing order."""
     api_url = f"{AWS_REST_API_URL}/orders/{order_id}"
     headers = __set_and_get_auth_headers()
@@ -246,7 +248,7 @@ def edit_order(order_id: str) -> Response | str | tuple[str, int] | tuple[Respon
             try:
                 resp = requests.put(api_url, json=payload, headers=headers, timeout=3)
                 if resp.status_code == 200:
-                    return make_response(redirect(url_for("get_order_detail", order_id=order_id))), 200
+                    return redirect(url_for("get_order_detail", order_id=order_id))
                 errors["form"] = f"Update failed (status {resp.status_code})."
             except requests.exceptions.Timeout:
                 return "Server timeout. Please try again.", 504
@@ -260,11 +262,13 @@ def edit_order(order_id: str) -> Response | str | tuple[str, int] | tuple[Respon
             return f"Failed to load order (status {resp.status_code}).", resp.status_code
         order = resp.json()
 
+    print(f"order: {order}")
+
     return render_template("edit_order.html", order=order, errors=errors, current_year=date.today().year)
 
 
 @app.route("/logout")
-def logout() -> Response | str | tuple[str, int]:
+def logout() -> Response | WerkzeugResponse | str | tuple[str, int]:
     """Logout the user by clearing session and redirecting through Google logout."""
     session_id = request.cookies.get("session_id")
     if session_id:
@@ -276,12 +280,12 @@ def logout() -> Response | str | tuple[str, int]:
                 "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?"
                 f"continue={url_for('index', _external=True)}"
             )
-            resp = make_response(redirect(logout_url))
+            resp = redirect(logout_url)
             resp.delete_cookie("session_id", domain=request.host, path="/")
             return resp
         except requests.exceptions.Timeout:
             return "Server timeout. Please try again.", 504
-    return make_response(redirect(url_for("index")))
+    return redirect(url_for("index"))
 
 
 if __name__ == "__main__":
