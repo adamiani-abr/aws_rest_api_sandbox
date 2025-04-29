@@ -96,7 +96,7 @@ def test_place_order_success(
         follow_redirects=False,
     )
 
-    assert res.status_code == 302
+    assert res.status_code == 201
     assert "/my-orders" in res.headers["Location"]
 
 
