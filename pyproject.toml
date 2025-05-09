@@ -173,7 +173,7 @@ skips = [
     'B104', # B104: flagging `host=0.0.0.0` for flask run, but needed for Docker (locally and on AWS ECS)
 ]
 exclude = [
-    'sandbox',  # directory
+    './sandbox',  # directory
 ]
 
 [tool.bandit.assert_used]

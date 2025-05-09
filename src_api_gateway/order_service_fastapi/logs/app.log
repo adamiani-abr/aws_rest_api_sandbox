@@ -1,0 +1,85 @@
+[2025-05-02 14:12:27] INFO uvicorn.error: Will watch for changes in these directories: ['C:\\Users\\adamiani\\ABR Dynamic Funds Dropbox\\Alex Damiani\\Programming\\aws_rest_api_sandbox\\src_api_gateway\\order_service_fastapi']
+[2025-05-02 14:12:27] INFO uvicorn.error: Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+[2025-05-02 14:12:27] INFO uvicorn.error: Started reloader process [20968] using WatchFiles
+[2025-05-02 14:12:28] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:28] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:29] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:29] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:29] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:30] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:30] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:30] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:31] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:31] INFO uvicorn.error: Started server process [6824]
+[2025-05-02 14:12:31] INFO uvicorn.error: Waiting for application startup.
+[2025-05-02 14:12:31] INFO uvicorn.error: Application startup complete.
+[2025-05-02 14:12:31] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:32] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:32] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:32] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:33] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:33] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:33] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:34] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:34] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:35] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:35] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:35] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:36] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:36] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:37] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:37] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:37] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:38] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:38] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:39] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:39] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:39] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:40] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:40] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:41] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:41] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:41] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:42] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:42] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:43] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:43] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:43] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:44] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:44] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:45] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:45] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:45] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:46] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:46] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:47] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:47] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:47] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:48] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:48] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:49] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:49] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:49] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:50] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:50] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:51] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:51] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:51] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:52] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:52] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:53] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:53] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:53] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:54] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:54] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:55] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:55] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:55] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:56] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:56] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:57] INFO watchfiles.main: 1 change detected
+[2025-05-02 14:12:57] INFO uvicorn.error: Shutting down
+[2025-05-02 14:12:57] INFO uvicorn.error: Waiting for application shutdown.
+[2025-05-02 14:12:57] INFO uvicorn.error: Application shutdown complete.
+[2025-05-02 14:12:57] INFO uvicorn.error: Finished server process [6824]
+[2025-05-02 14:12:57] INFO uvicorn.error: Stopping reloader process [20968]

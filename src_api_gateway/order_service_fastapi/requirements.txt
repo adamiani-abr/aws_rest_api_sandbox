@@ -7,3 +7,4 @@ pydantic
 uvicorn
 email-validator  # for pydantic EmailStr
 python-multipart  # for fastapi file upload
+pydantic_settings  # for core.config.py - Settings

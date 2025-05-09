@@ -12,7 +12,7 @@
   <form method="post">
     <label>Items:<br>
       <input type="text" name="items"
-             value="{{ order['items'] | join(',') }}"
+             value="{{ order.get('items', []) | join(',') }}"
              required pattern="[^,]+(,[^,]+)*">
     </label><br>
     <label>Total:<br>
@@ -29,5 +29,9 @@
       </select>
     </label><br>
     <button type="submit">Update Order</button>
+  </form>
+
+  <form method="post" action="{{ url_for('delete_order', order_id=order.order_id) }}" onsubmit="return confirm('Are you sure you want to delete this order?');">
+    <button type="submit" class="delete-button">Delete Order</button>
   </form>
 {% endblock %}

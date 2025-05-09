@@ -1,0 +1,10 @@
+.pytest_cache/
+__pycache__/
+.ruff_cache/
+.mypy_cache/
+
+.gitignore
+.env
+app_copy.py
+aws-task-definition.json
+README.md

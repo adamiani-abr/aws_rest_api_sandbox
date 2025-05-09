@@ -8,7 +8,7 @@ import boto3
 logging.basicConfig(level=logging.INFO)
 
 
-class AWSAppConfigClient:
+class AWSAppConfig:
     """AWS AppConfig client with caching."""
 
     def __init__(self, app_id: str, env_id: str, config_profile_id: str, ttl: int = 60):
